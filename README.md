@@ -1,17 +1,46 @@
-## My Project
+# AWS API Models
 
-TODO: Fill this README out!
+> [!WARNING]
+> Currently, this repository is NOT updated daily, and therefore SHOULD NOT be considered the most up-to-date source of
+> AWS APIs.  
+>
+> Additionally, this repository is not closely monitored, and the files here are generated from other sources. Because
+> of this, we are unable to accept pull requests and issues related to the service models should be directed to other
+> channels. 
+> 
+> For questions related to the AWS SDKs, please visit the respective repository for
+> [SDK specific support](https://github.com/aws). If you have an AWS support plan, you can create a new technical
+> support case in the [AWS Support Center](https://console.aws.amazon.com/support/home#/). Alternatively, you may
+> reach out to general AWS Support [here](https://aws.amazon.com/contact-us/)).
 
-Be sure to:
+This repository contains [Smithy](https://smithy.io/) models (in the
+[JSON AST](https://smithy.io/2.0/spec/json-ast.html) form) for all public AWS API services. Smithy is an open-source
+interface definition language, set of code generators, and developer tools used to generate code for web services and 
+client SDKs from API models. At AWS, we use Smithy extensively to model our service APIs and provide the daily releases
+of the AWS SDKs and CLIs.
 
-* Change the title in this README
-* Edit your repository description on GitHub
+AWS API models can be helpful for a variety of uses cases such as building custom SDKs/CLIs SDKs for use with AWS or
+implementing MCP servers to interact with AWS services.
 
-## Security
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+## Directory Structure
+
+The AWS models repository contains:
+
+* One top-level directory per service
+    * Top-level service directories are named using the `<sdk-id>` of the service, where `<sdk-id>` is the value of the
+    model's [`sdkId`](https://smithy.io/2.0/aws/aws-core.html#sdkid), lowercased and with spaces converted to hyphens
+* Each service directory contains one directory per `<version>` of the service, where `<version>` is the value of the
+service shape's [version property](https://smithy.io/2.0/spec/service-types.html#service)
+* Contained within a service-version directory, a model file named `<sdk-id>-<version>.json` will be present
+
+
+## Learn more
+
+We invite you to learn more about the AWS preferred API modeling language at [smithy.io](https://smithy.io/).
+
 
 ## License
 
-This project is licensed under the Apache-2.0 License.
+This project is licensed under the [Apache-2.0 License](LICENSE). 
 
