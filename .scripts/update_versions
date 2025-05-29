@@ -3,7 +3,7 @@
 import argparse
 import logging
 from pathlib import Path
-from typing import Set
+from typing import List
 
 DEFAULT_VERSION = "1.0.0"
 
@@ -15,13 +15,12 @@ logging.basicConfig(
 )
 
 
-def main(properties_file: Path, projects: Set[str]):
+def main(properties_file: Path, projects: List[str]):
     if not properties_file.is_file():
         raise ValueError(f"Properties file {properties_file} does not exist")
 
     properties = read_properties(properties_file)
-
-    for project in sorted(projects):
+    for project in projects:
         project_key = f"model.{project}.version"
         if project_key not in properties:
             logger.info(
@@ -41,7 +40,8 @@ def main(properties_file: Path, projects: Set[str]):
     
     # Write the file containing the list of changed services, excluding the 'all' project
     changed_file = properties_file.parent / '.changed'
-    projects.discard('all')
+    if 'all' in projects:
+        projects.remove('all')
     changed_file.write_text("\n".join(projects))
 
 
@@ -89,4 +89,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.properties, set(args.services))
+    main(args.properties, sorted(set(args.services)))
