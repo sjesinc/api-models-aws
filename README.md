@@ -22,10 +22,10 @@ implementing MCP servers to interact with AWS services.
 
 ## Directory Structure
 
-The AWS models repository contains:
+The AWS models repository contains a top-level directory, `models`, wich contains:
 
-* Under `models/`, there is one directory per service
-    * Top-level service directories are named using the `<sdk-id>` of the service, where `<sdk-id>` is the value of the
+* One directory per public AWS service
+    * Note: service directories are named using the `<sdk-id>` of the service, where `<sdk-id>` is the value of the
     model's [`sdkId`](https://smithy.io/2.0/aws/aws-core.html#sdkid), lowercased and with spaces converted to hyphens
 * Each service directory contains one directory per `<version>` of the service, where `<version>` is the value of the
 service shape's [version property](https://smithy.io/2.0/spec/service-types.html#service)
