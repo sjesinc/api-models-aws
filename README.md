@@ -1,7 +1,7 @@
 # AWS API Models
 
 > [!WARNING]
-> Additionally, this repository is not closely monitored, and the files here are generated from other sources. Because
+> This repository is not closely monitored, and the files here are generated from other sources. Because
 > of this, we are unable to accept pull requests and issues related to the service models should be directed to other
 > channels. 
 > 
