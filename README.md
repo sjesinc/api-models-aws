@@ -1,9 +1,6 @@
 # AWS API Models
 
 > [!WARNING]
-> Currently, this repository is NOT updated daily, and therefore SHOULD NOT be considered the most up-to-date source of
-> AWS APIs.  
->
 > Additionally, this repository is not closely monitored, and the files here are generated from other sources. Because
 > of this, we are unable to accept pull requests and issues related to the service models should be directed to other
 > channels. 
