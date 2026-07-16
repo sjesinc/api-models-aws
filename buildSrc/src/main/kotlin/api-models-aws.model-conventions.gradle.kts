@@ -43,6 +43,16 @@ sourceSets {
     }
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+}
+
+tasks.withType<JavaCompile> {
+    options.release.set(8)
+}
+
 tasks {
     build {
         mustRunAfter(clean)

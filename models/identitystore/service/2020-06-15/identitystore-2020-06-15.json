@@ -57,6 +57,218 @@
         "aws.protocols#awsJson1_1": {},
         "smithy.api#documentation": "<p>The Identity Store service used by IAM Identity Center provides a single place to retrieve all of your identities (users and groups). For more information, see the <a href=\"https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html\"> IAM Identity Center User Guide</a>.</p> <p>This reference guide describes the identity store operations that you can call programmatically and includes detailed information about data types and errors.</p> <note> <p> IAM Identity Center uses the <code>sso</code>, <code>sso-directory</code>, and <code>identitystore</code> API namespaces. The <code>sso-directory</code> and <code>identitystore</code> namespaces authorize access to data in the Identity Store. Make sure your policies with IAM actions from these two namespaces are consistent to avoid conflicting authorization to the same data.</p> </note>",
         "smithy.api#title": "AWS SSO Identity Store",
+        "smithy.rules#endpointBdd": {
+          "version": "1.1",
+          "parameters": {
+            "Region": {
+              "builtIn": "AWS::Region",
+              "required": false,
+              "documentation": "The AWS region used to dispatch the request.",
+              "type": "string"
+            },
+            "UseDualStack": {
+              "builtIn": "AWS::UseDualStack",
+              "required": true,
+              "default": false,
+              "documentation": "When true, use the dual-stack endpoint. If the configured endpoint does not support dual-stack, dispatching the request MAY return an error.",
+              "type": "boolean"
+            },
+            "UseFIPS": {
+              "builtIn": "AWS::UseFIPS",
+              "required": true,
+              "default": false,
+              "documentation": "When true, send this request to the FIPS-compliant regional endpoint. If the configured endpoint does not have a FIPS compliant endpoint, dispatching the request will return an error.",
+              "type": "boolean"
+            },
+            "Endpoint": {
+              "builtIn": "SDK::Endpoint",
+              "required": false,
+              "documentation": "Override the endpoint used to send this request",
+              "type": "string"
+            }
+          },
+          "conditions": [
+            {
+              "fn": "isSet",
+              "argv": [
+                {
+                  "ref": "Endpoint"
+                }
+              ]
+            },
+            {
+              "fn": "isSet",
+              "argv": [
+                {
+                  "ref": "Region"
+                }
+              ]
+            },
+            {
+              "fn": "aws.partition",
+              "argv": [
+                {
+                  "ref": "Region"
+                }
+              ],
+              "assign": "PartitionResult"
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "ref": "UseFIPS"
+                },
+                true
+              ]
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "ref": "UseDualStack"
+                },
+                true
+              ]
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "fn": "getAttr",
+                  "argv": [
+                    {
+                      "ref": "PartitionResult"
+                    },
+                    "supportsDualStack"
+                  ]
+                },
+                true
+              ]
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "fn": "getAttr",
+                  "argv": [
+                    {
+                      "ref": "PartitionResult"
+                    },
+                    "supportsFIPS"
+                  ]
+                },
+                true
+              ]
+            },
+            {
+              "fn": "stringEquals",
+              "argv": [
+                {
+                  "fn": "getAttr",
+                  "argv": [
+                    {
+                      "ref": "PartitionResult"
+                    },
+                    "name"
+                  ]
+                },
+                "aws-us-gov"
+              ]
+            }
+          ],
+          "results": [
+            {
+              "conditions": [],
+              "error": "Invalid Configuration: FIPS and custom endpoint are not supported",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "error": "Invalid Configuration: Dualstack and custom endpoint are not supported",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": {
+                  "ref": "Endpoint"
+                },
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://identitystore-fips.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "FIPS and DualStack are enabled, but this partition does not support one or both",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://identitystore.{Region}.amazonaws.com",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://identitystore-fips.{Region}.{PartitionResult#dnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "FIPS is enabled but this partition does not support FIPS",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://identitystore.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "DualStack is enabled but this partition does not support DualStack",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://identitystore.{Region}.{PartitionResult#dnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "Invalid Configuration: Missing Region",
+              "type": "error"
+            }
+          ],
+          "root": 2,
+          "nodeCount": 14,
+          "nodes": "/////wAAAAH/////AAAAAAAAAA0AAAADAAAAAQAAAAQF9eEMAAAAAgAAAAUF9eEMAAAAAwAAAAgAAAAGAAAABAAAAAcF9eELAAAABQX14QkF9eEKAAAABAAAAAsAAAAJAAAABgAAAAoF9eEIAAAABwX14QYF9eEHAAAABQAAAAwF9eEFAAAABgX14QQF9eEFAAAAAwX14QEAAAAOAAAABAX14QIF9eED"
+        },
         "smithy.rules#endpointRuleSet": {
           "version": "1.0",
           "parameters": {
@@ -932,7 +1144,7 @@
           }
         },
         "Primary": {
-          "target": "com.amazonaws.identitystore#SensitiveBooleanType",
+          "target": "com.amazonaws.identitystore#BooleanType",
           "traits": {
             "smithy.api#default": false,
             "smithy.api#documentation": "<p>A Boolean value representing whether this is the primary address for the associated resource.</p>"
@@ -1022,6 +1234,12 @@
       "type": "document",
       "traits": {
         "smithy.api#documentation": "<p>The value of the attribute. This is a <code>Document</code> type. This type is not supported by Java V1, Go V1, and older versions of the CLI.</p>"
+      }
+    },
+    "com.amazonaws.identitystore#BooleanType": {
+      "type": "boolean",
+      "traits": {
+        "smithy.api#default": false
       }
     },
     "com.amazonaws.identitystore#ConflictException": {
@@ -1336,6 +1554,12 @@
           "target": "com.amazonaws.identitystore#SensitiveStringType",
           "traits": {
             "smithy.api#documentation": "<p>The user's birthdate in YYYY-MM-DD format. This field supports standard date format for storing personal information.</p>"
+          }
+        },
+        "Roles": {
+          "target": "com.amazonaws.identitystore#Roles",
+          "traits": {
+            "smithy.api#documentation": "<p>A list of <code>Role</code> objects containing roles associated with the user.</p>"
           }
         },
         "Extensions": {
@@ -1877,6 +2101,12 @@
             "smithy.api#documentation": "<p>The user's birthdate in YYYY-MM-DD format. This field returns the stored birthdate information for the user.</p>"
           }
         },
+        "Roles": {
+          "target": "com.amazonaws.identitystore#Roles",
+          "traits": {
+            "smithy.api#documentation": "<p>The roles of the user.</p>"
+          }
+        },
         "CreatedAt": {
           "target": "com.amazonaws.identitystore#DateType",
           "traits": {
@@ -1925,7 +2155,7 @@
           }
         },
         "Primary": {
-          "target": "com.amazonaws.identitystore#SensitiveBooleanType",
+          "target": "com.amazonaws.identitystore#BooleanType",
           "traits": {
             "smithy.api#default": false,
             "smithy.api#documentation": "<p>A Boolean value representing whether this is the primary email address for the associated resource.</p>"
@@ -2423,7 +2653,7 @@
           }
         },
         "MembershipExists": {
-          "target": "com.amazonaws.identitystore#SensitiveBooleanType",
+          "target": "com.amazonaws.identitystore#BooleanType",
           "traits": {
             "smithy.api#default": false,
             "smithy.api#documentation": "<p>Indicates whether a membership relation exists or not.</p>"
@@ -3023,7 +3253,7 @@
           }
         },
         "Primary": {
-          "target": "com.amazonaws.identitystore#SensitiveBooleanType",
+          "target": "com.amazonaws.identitystore#BooleanType",
           "traits": {
             "smithy.api#default": false,
             "smithy.api#documentation": "<p>A Boolean value representing whether this is the primary phone number for the associated resource.</p>"
@@ -3069,7 +3299,7 @@
           }
         },
         "Primary": {
-          "target": "com.amazonaws.identitystore#SensitiveBooleanType",
+          "target": "com.amazonaws.identitystore#BooleanType",
           "traits": {
             "smithy.api#default": false,
             "smithy.api#documentation": "<p>Specifies whether this is the user's primary photo. Default value is <code>false</code>. Only one photo can be designated as primary per user.</p>"
@@ -3201,11 +3431,43 @@
         "smithy.api#default": 0
       }
     },
-    "com.amazonaws.identitystore#SensitiveBooleanType": {
-      "type": "boolean",
+    "com.amazonaws.identitystore#Role": {
+      "type": "structure",
+      "members": {
+        "Value": {
+          "target": "com.amazonaws.identitystore#SensitiveStringType",
+          "traits": {
+            "smithy.api#documentation": "<p>A string containing a role name. For example, \"Researcher.\"</p>"
+          }
+        },
+        "Type": {
+          "target": "com.amazonaws.identitystore#SensitiveStringType",
+          "traits": {
+            "smithy.api#documentation": "<p>A string representing the type of role. For example, \"Work.\"</p>"
+          }
+        },
+        "Primary": {
+          "target": "com.amazonaws.identitystore#BooleanType",
+          "traits": {
+            "smithy.api#default": false,
+            "smithy.api#documentation": "<p>A Boolean value representing whether this is the primary role for the associated resource.</p>"
+          }
+        }
+      },
       "traits": {
-        "smithy.api#default": false,
-        "smithy.api#sensitive": {}
+        "smithy.api#documentation": "<p>The role associated with the user.</p>"
+      }
+    },
+    "com.amazonaws.identitystore#Roles": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.identitystore#Role"
+      },
+      "traits": {
+        "smithy.api#length": {
+          "min": 1,
+          "max": 1
+        }
       }
     },
     "com.amazonaws.identitystore#SensitiveStringType": {
@@ -3545,6 +3807,12 @@
           "target": "com.amazonaws.identitystore#SensitiveStringType",
           "traits": {
             "smithy.api#documentation": "<p>The user's birthdate in YYYY-MM-DD format. This field stores personal birthdate information for the user.</p>"
+          }
+        },
+        "Roles": {
+          "target": "com.amazonaws.identitystore#Roles",
+          "traits": {
+            "smithy.api#documentation": "<p>A list of <code>Role</code> objects containing roles associated with the user.</p>"
           }
         },
         "CreatedAt": {

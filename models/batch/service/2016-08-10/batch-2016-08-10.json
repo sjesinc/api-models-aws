@@ -46,6 +46,9 @@
           "target": "com.amazonaws.batch#CreateJobQueue"
         },
         {
+          "target": "com.amazonaws.batch#CreateQuotaShare"
+        },
+        {
           "target": "com.amazonaws.batch#CreateSchedulingPolicy"
         },
         {
@@ -59,6 +62,9 @@
         },
         {
           "target": "com.amazonaws.batch#DeleteJobQueue"
+        },
+        {
+          "target": "com.amazonaws.batch#DeleteQuotaShare"
         },
         {
           "target": "com.amazonaws.batch#DeleteSchedulingPolicy"
@@ -85,6 +91,9 @@
           "target": "com.amazonaws.batch#DescribeJobs"
         },
         {
+          "target": "com.amazonaws.batch#DescribeQuotaShare"
+        },
+        {
           "target": "com.amazonaws.batch#DescribeSchedulingPolicies"
         },
         {
@@ -104,6 +113,9 @@
         },
         {
           "target": "com.amazonaws.batch#ListJobsByConsumableResource"
+        },
+        {
+          "target": "com.amazonaws.batch#ListQuotaShares"
         },
         {
           "target": "com.amazonaws.batch#ListSchedulingPolicies"
@@ -145,10 +157,16 @@
           "target": "com.amazonaws.batch#UpdateJobQueue"
         },
         {
+          "target": "com.amazonaws.batch#UpdateQuotaShare"
+        },
+        {
           "target": "com.amazonaws.batch#UpdateSchedulingPolicy"
         },
         {
           "target": "com.amazonaws.batch#UpdateServiceEnvironment"
+        },
+        {
+          "target": "com.amazonaws.batch#UpdateServiceJob"
         }
       ],
       "traits": {
@@ -167,6 +185,242 @@
         "smithy.api#title": "AWS Batch",
         "smithy.api#xmlNamespace": {
           "uri": "http://batch.amazonaws.com/doc/2016-08-10/"
+        },
+        "smithy.rules#endpointBdd": {
+          "version": "1.1",
+          "parameters": {
+            "Region": {
+              "builtIn": "AWS::Region",
+              "required": false,
+              "documentation": "The AWS region used to dispatch the request.",
+              "type": "string"
+            },
+            "UseDualStack": {
+              "builtIn": "AWS::UseDualStack",
+              "required": true,
+              "default": false,
+              "documentation": "When true, use the dual-stack endpoint. If the configured endpoint does not support dual-stack, dispatching the request MAY return an error.",
+              "type": "boolean"
+            },
+            "UseFIPS": {
+              "builtIn": "AWS::UseFIPS",
+              "required": true,
+              "default": false,
+              "documentation": "When true, send this request to the FIPS-compliant regional endpoint. If the configured endpoint does not have a FIPS compliant endpoint, dispatching the request will return an error.",
+              "type": "boolean"
+            },
+            "Endpoint": {
+              "builtIn": "SDK::Endpoint",
+              "required": false,
+              "documentation": "Override the endpoint used to send this request",
+              "type": "string"
+            }
+          },
+          "conditions": [
+            {
+              "fn": "isSet",
+              "argv": [
+                {
+                  "ref": "Endpoint"
+                }
+              ]
+            },
+            {
+              "fn": "isSet",
+              "argv": [
+                {
+                  "ref": "Region"
+                }
+              ]
+            },
+            {
+              "fn": "aws.partition",
+              "argv": [
+                {
+                  "ref": "Region"
+                }
+              ],
+              "assign": "PartitionResult"
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "ref": "UseFIPS"
+                },
+                true
+              ]
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "ref": "UseDualStack"
+                },
+                true
+              ]
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "fn": "getAttr",
+                  "argv": [
+                    {
+                      "ref": "PartitionResult"
+                    },
+                    "supportsDualStack"
+                  ]
+                },
+                true
+              ]
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "fn": "getAttr",
+                  "argv": [
+                    {
+                      "ref": "PartitionResult"
+                    },
+                    "supportsFIPS"
+                  ]
+                },
+                true
+              ]
+            },
+            {
+              "fn": "stringEquals",
+              "argv": [
+                {
+                  "fn": "getAttr",
+                  "argv": [
+                    {
+                      "ref": "PartitionResult"
+                    },
+                    "name"
+                  ]
+                },
+                "aws"
+              ]
+            },
+            {
+              "fn": "stringEquals",
+              "argv": [
+                {
+                  "fn": "getAttr",
+                  "argv": [
+                    {
+                      "ref": "PartitionResult"
+                    },
+                    "name"
+                  ]
+                },
+                "aws-us-gov"
+              ]
+            }
+          ],
+          "results": [
+            {
+              "conditions": [],
+              "error": "Invalid Configuration: FIPS and custom endpoint are not supported",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "error": "Invalid Configuration: Dualstack and custom endpoint are not supported",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": {
+                  "ref": "Endpoint"
+                },
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://batch-fips.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "FIPS and DualStack are enabled, but this partition does not support one or both",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://fips.batch.{Region}.amazonaws.com",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://batch.{Region}.amazonaws.com",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://batch-fips.{Region}.{PartitionResult#dnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "FIPS is enabled but this partition does not support FIPS",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://batch.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "DualStack is enabled but this partition does not support DualStack",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://batch.{Region}.{PartitionResult#dnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "Invalid Configuration: Missing Region",
+              "type": "error"
+            }
+          ],
+          "root": 2,
+          "nodeCount": 15,
+          "nodes": "/////wAAAAH/////AAAAAAAAAA4AAAADAAAAAQAAAAQF9eENAAAAAgAAAAUF9eENAAAAAwAAAAgAAAAGAAAABAAAAAcF9eEMAAAABQX14QoF9eELAAAABAAAAAwAAAAJAAAABgAAAAoF9eEJAAAABwX14QYAAAALAAAACAX14QcF9eEIAAAABQAAAA0F9eEFAAAABgX14QQF9eEFAAAAAwX14QEAAAAPAAAABAX14QIF9eED"
         },
         "smithy.rules#endpointRuleSet": {
           "version": "1.0",
@@ -1204,6 +1458,12 @@
             "smithy.api#documentation": "<p>A summary of the number of array job children in each available job status. This parameter\n   is returned for parent array jobs.</p>"
           }
         },
+        "statusSummaryLastUpdatedAt": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the <code>statusSummary</code> was last updated.</p>"
+          }
+        },
         "size": {
           "target": "com.amazonaws.batch#Integer",
           "traits": {
@@ -1234,6 +1494,18 @@
           "target": "com.amazonaws.batch#Integer",
           "traits": {
             "smithy.api#documentation": "<p>The job index within the array that's associated with this job. This parameter is returned\n   for children of array jobs.</p>"
+          }
+        },
+        "statusSummary": {
+          "target": "com.amazonaws.batch#ArrayJobStatusSummary",
+          "traits": {
+            "smithy.api#documentation": "<p>A summary of the number of array job children in each available job status. This parameter\n   is returned for parent array jobs.</p>"
+          }
+        },
+        "statusSummaryLastUpdatedAt": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the <code>statusSummary</code> was last updated.</p>"
           }
         }
       },
@@ -1503,6 +1775,12 @@
             "smithy.api#enumValue": "BEST_FIT_PROGRESSIVE"
           }
         },
+        "BEST_FIT_PROGRESSIVE_ORDERED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "BEST_FIT_PROGRESSIVE_ORDERED"
+          }
+        },
         "SPOT_CAPACITY_OPTIMIZED": {
           "target": "smithy.api#Unit",
           "traits": {
@@ -1513,6 +1791,12 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "SPOT_PRICE_CAPACITY_OPTIMIZED"
+          }
+        },
+        "SPOT_CAPACITY_OPTIMIZED_PRIORITIZED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "SPOT_CAPACITY_OPTIMIZED_PRIORITIZED"
           }
         }
       }
@@ -1555,6 +1839,12 @@
             "smithy.api#enumValue": "BEST_FIT_PROGRESSIVE"
           }
         },
+        "BEST_FIT_PROGRESSIVE_ORDERED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "BEST_FIT_PROGRESSIVE_ORDERED"
+          }
+        },
         "SPOT_CAPACITY_OPTIMIZED": {
           "target": "smithy.api#Unit",
           "traits": {
@@ -1565,6 +1855,12 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "SPOT_PRICE_CAPACITY_OPTIMIZED"
+          }
+        },
+        "SPOT_CAPACITY_OPTIMIZED_PRIORITIZED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "SPOT_CAPACITY_OPTIMIZED_PRIORITIZED"
           }
         }
       }
@@ -1643,18 +1939,18 @@
         "maxCapacity": {
           "target": "com.amazonaws.batch#Integer",
           "traits": {
-            "smithy.api#documentation": "<p>The maximum capacity available for the service environment. This value represents the maximum amount of resources that can be allocated to service jobs.</p>\n         <p>For example, <code>maxCapacity=50</code>, <code>capacityUnit=NUM_INSTANCES</code>. This indicates that the\n            maximum number of instances that can be run on this service environment is 50. You could\n            then run 5 SageMaker Training jobs that each use 10 instances. However, if you submit another job that\n            requires 10 instances, it will wait in the queue.</p>"
+            "smithy.api#documentation": "<p>The maximum capacity available for the service environment. For a quota management enabled service environment, this value represents\n      the maximum quantity of a particular resource type (specified by <code>capacityUnit</code>) that can be allocated to service jobs.\n      For other service environments, this value represents the maximum quantity of all resources that can be allocated to service jobs.</p>\n         <p>For example, if <code>maxCapacity=50</code> and <code>capacityUnit=NUM_INSTANCES</code>, you can run up to 50 instances concurrently.\n      If you run 5 SageMaker Training jobs that each use 10 instances, a subsequent job requiring 10 instances waits in the queue until\n      capacity is available. In a quota management enabled service environment with <code>capacityUnit=ml.m5.large</code>, only\n      <code>ml.m5.large</code> instances count against this limit, and jobs requiring other instance types wait until a matching capacity limit is configured.</p>"
           }
         },
         "capacityUnit": {
           "target": "com.amazonaws.batch#String",
           "traits": {
-            "smithy.api#documentation": "<p>The unit of measure for the capacity limit. This defines how the maxCapacity value should be interpreted. For <code>SAGEMAKER_TRAINING</code> jobs, use <code>NUM_INSTANCES</code>.</p>"
+            "smithy.api#documentation": "<p>The unit of measure for the capacity limit, which defines how <code>maxCapacity</code> is interpreted. For <code>SAGEMAKER_TRAINING</code> jobs in a quota management\n      enabled service environment, specify the <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ResourceConfig.html#sagemaker-Type-ResourceConfig-InstanceType\">instance type</a>\n      (for example, <code>ml.m5.large</code>). Otherwise, use <code>NUM_INSTANCES</code>.</p>"
           }
         }
       },
       "traits": {
-        "smithy.api#documentation": "<p>Defines the capacity limit for a service environment. This structure specifies the maximum amount of resources that can be used by service jobs in the environment.</p>"
+        "smithy.api#documentation": "<p>Defines the type and maximum quantity of resources that can be allocated to service jobs in a service environment.</p>"
       }
     },
     "com.amazonaws.batch#CapacityLimits": {
@@ -1731,7 +2027,7 @@
         "state": {
           "target": "com.amazonaws.batch#CEState",
           "traits": {
-            "smithy.api#documentation": "<p>The state of the compute environment. The valid values are <code>ENABLED</code> or\n    <code>DISABLED</code>.</p>\n         <p>If the state is <code>ENABLED</code>, then the Batch scheduler can attempt to place jobs\n   from an associated job queue on the compute resources within the environment. If the compute\n   environment is managed, then it can scale its instances out or in automatically based on the job\n   queue demand.</p>\n         <p>If the state is <code>DISABLED</code>, then the Batch scheduler doesn't attempt to place\n   jobs within the environment. Jobs in a <code>STARTING</code> or <code>RUNNING</code> state\n   continue to progress normally. Managed compute environments in the <code>DISABLED</code> state\n   don't scale out. </p>\n         <note>\n            <p>Compute environments in a <code>DISABLED</code> state may continue to incur billing\n    charges. To prevent additional charges, turn off and then delete the compute environment. For\n    more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/compute_environment_parameters.html#compute_environment_state\">State</a> in the <i>Batch User Guide</i>.</p>\n         </note>\n         <p>When an instance is idle, the instance scales down to the <code>minvCpus</code> value.\n   However, the instance size doesn't change. For example, consider a <code>c5.8xlarge</code>\n   instance with a <code>minvCpus</code> value of <code>4</code> and a <code>desiredvCpus</code>\n   value of <code>36</code>. This instance doesn't scale down to a <code>c5.large</code>\n   instance.</p>"
+            "smithy.api#documentation": "<p>The state of the compute environment. The valid values are <code>ENABLED</code> or\n    <code>DISABLED</code>.</p>\n         <p>If the state is <code>ENABLED</code>, then the Batch scheduler can attempt to place jobs\n   from an associated job queue on the compute resources within the environment. If the compute\n   environment is managed, then it can scale its instances out or in automatically based on the job\n   queue demand.</p>\n         <p>If the state is <code>DISABLED</code>, then the Batch scheduler doesn't attempt to place\n   jobs within the environment. Jobs in a <code>STARTING</code> or <code>RUNNING</code> state\n   continue to progress normally. Managed compute environments in the <code>DISABLED</code> state\n   don't scale out. </p>\n         <note>\n            <p>Compute environments in a <code>DISABLED</code> state may continue to incur billing\n    charges, for example, if they have running instances due to jobs that are still executing or a non-zero <code>minvCpus</code> setting. To prevent additional charges, disable and delete the compute environment.</p>\n         </note>\n         <p>When an instance is idle, the instance scales down to the <code>minvCpus</code> value.\n   However, the instance size doesn't change. For example, consider a <code>c5.8xlarge</code>\n   instance with a <code>minvCpus</code> value of <code>4</code> and a <code>desiredvCpus</code>\n   value of <code>36</code>. This instance doesn't scale down to a <code>c5.large</code>\n   instance.</p>"
           }
         },
         "status": {
@@ -1843,7 +2139,7 @@
         "allocationStrategy": {
           "target": "com.amazonaws.batch#CRAllocationStrategy",
           "traits": {
-            "smithy.api#documentation": "<p>The allocation strategy to use for the compute resource if not enough instances of the best\n   fitting instance type can be allocated. This might be because of availability of the instance\n   type in the Region or <a href=\"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html\">Amazon EC2 service limits</a>. For more\n   information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/allocation-strategies.html\">Allocation strategies</a> in the <i>Batch User Guide</i>.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>\n         <dl>\n            <dt>BEST_FIT (default)</dt>\n            <dd>\n               <p>Batch selects an instance type that best fits the needs of the jobs with a preference\n      for the lowest-cost instance type. If additional instances of the selected instance type\n      aren't available, Batch waits for the additional instances to be available. If there aren't\n      enough instances available or the user is reaching <a href=\"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html\">Amazon EC2 service limits</a>,\n      additional jobs aren't run until the currently running jobs are completed. This allocation\n      strategy keeps costs lower but can limit scaling. If you're using Spot Fleets with\n       <code>BEST_FIT</code>, the Spot Fleet IAM Role must be specified. Compute resources that use\n      a <code>BEST_FIT</code> allocation strategy don't support infrastructure updates and can't\n      update some parameters. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/updating-compute-environments.html\">Updating compute environments</a> in\n      the <i>Batch User Guide</i>.</p>\n            </dd>\n            <dt>BEST_FIT_PROGRESSIVE</dt>\n            <dd>\n               <p>Batch selects additional instance types that are large enough to meet the requirements\n      of the jobs in the queue. Its preference is for instance types with lower cost vCPUs. If\n      additional instances of the previously selected instance types aren't available, Batch\n      selects new instance types.</p>\n            </dd>\n            <dt>SPOT_CAPACITY_OPTIMIZED</dt>\n            <dd>\n               <p>Batch selects one or more instance types that are large enough to meet the requirements\n      of the jobs in the queue. Its preference is for instance types that are less likely to be\n      interrupted. This allocation strategy is only available for Spot Instance compute\n      resources.</p>\n            </dd>\n            <dt>SPOT_PRICE_CAPACITY_OPTIMIZED</dt>\n            <dd>\n               <p>The price and capacity optimized allocation strategy looks at both price and capacity to\n      select the Spot Instance pools that are the least likely to be interrupted and have the lowest\n      possible price. This allocation strategy is only available for Spot Instance compute\n      resources.</p>\n            </dd>\n         </dl>\n         <p>With <code>BEST_FIT_PROGRESSIVE</code>,<code>SPOT_CAPACITY_OPTIMIZED</code> and\n    <code>SPOT_PRICE_CAPACITY_OPTIMIZED</code> (recommended) strategies using On-Demand or Spot \n    Instances, and the <code>BEST_FIT</code> strategy using Spot Instances, Batch might need to \n    exceed <code>maxvCpus</code> to meet your capacity requirements. In this event, Batch never \n    exceeds <code>maxvCpus</code> by more than a single instance.</p>"
+            "smithy.api#documentation": "<p>The allocation strategy to use for the compute resource if not enough instances of the best\n fitting instance type can be allocated. This might be because of availability of the instance\n type in the Region or <a href=\"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html\">Amazon EC2 service limits</a>. For more\n information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/allocation-strategies.html\">Allocation strategies</a> in the <i>Batch User Guide</i>.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>\n         <note>\n            <p>This parameter is required for Amazon EKS compute environments. For Amazon ECS compute environments,\n     if this parameter isn't specified, the <code>BEST_FIT</code> allocation strategy is used by\n     default.</p>\n         </note>\n         <dl>\n            <dt>BEST_FIT (default)</dt>\n            <dd>\n               <p>Batch selects an instance type that best fits the needs of the jobs with a preference\n      for the lowest-cost instance type. If additional instances of the selected instance type\n      aren't available, Batch waits for the additional instances to be available. If there aren't\n      enough instances available or the user is reaching <a href=\"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html\">Amazon EC2 service limits</a>,\n      additional jobs aren't run until the currently running jobs are completed. This allocation\n      strategy keeps costs lower but can limit scaling. If you're using Spot Fleets with\n       <code>BEST_FIT</code>, the Spot Fleet IAM Role must be specified. Compute resources that use\n      a <code>BEST_FIT</code> allocation strategy don't support infrastructure updates and can't\n      update some parameters. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/updating-compute-environments.html\">Updating compute environments</a> in\n      the <i>Batch User Guide</i>.</p>\n            </dd>\n            <dt>BEST_FIT_PROGRESSIVE</dt>\n            <dd>\n               <p>Batch selects additional instance types that are large enough to meet the requirements\n      of the jobs in the queue. Its preference is for instance types with lower cost vCPUs. If\n      additional instances of the previously selected instance types aren't available, Batch\n      selects new instance types.</p>\n            </dd>\n            <dt>BEST_FIT_PROGRESSIVE_ORDERED</dt>\n            <dd>\n               <important>\n                  <p>This is an advanced allocation strategy only for customers who want to control which\n       instance types are preferred during scaling.</p>\n                  <p>Placing large instance types at the top of the list may result in <b>over-provisioning</b> for\n       small jobs. Placing small instance types at the top may cause the compute environment to\n       reach Amazon EC2 instance count limits before reaching <code>maxvCpus</code>.</p>\n               </important>\n               <p>Batch selects instance types in the order they appear in the\n      <code>instanceTypes</code> list. When an instance family is specified, sizes within that\n      family are expanded using <code>BEST_FIT_PROGRESSIVE</code> logic\u2014preferring sizes that\n      best fit the jobs, with larger sizes as fallback. Instance types that cannot meet the resource\n      requirements of the jobs are skipped. This strategy is only available for On-Demand Instance\n      (<code>EC2</code>) compute resources.</p>\n               <p>If an instance family and an explicit instance type from that family both appear in\n      <code>instanceTypes</code>, the explicit type takes its listed position and is excluded from\n      the family expansion. For example, in <code>[\"m7a.4xlarge\", \"m7a\", \"m6a\"]</code>,\n      <code>m7a.4xlarge</code> is always placed first and is excluded from the <code>m7a</code>\n      family expansion.</p>\n            </dd>\n            <dt>SPOT_CAPACITY_OPTIMIZED</dt>\n            <dd>\n               <p>Batch selects one or more instance types that are large enough to meet the requirements\n      of the jobs in the queue. Its preference is for instance types that are less likely to be\n      interrupted. This allocation strategy is only available for Spot Instance compute\n      resources.</p>\n            </dd>\n            <dt>SPOT_PRICE_CAPACITY_OPTIMIZED</dt>\n            <dd>\n               <p>The price and capacity optimized allocation strategy looks at both price and capacity to\n      select the Spot Instance pools that are the least likely to be interrupted and have the lowest\n      possible price. This allocation strategy is only available for Spot Instance compute\n      resources.</p>\n            </dd>\n            <dt>SPOT_CAPACITY_OPTIMIZED_PRIORITIZED</dt>\n            <dd>\n               <important>\n                  <p>This is an advanced allocation strategy for customers who want to influence instance\n       type selection during scaling. This strategy optimizes for <b>capacity\n       first</b>, and honors instance type priorities on a best-effort basis (priorities are\n       honored when they do not significantly reduce available Spot capacity).</p>\n                  <p>Placing large instance types at the top of the list may result in <b>over-provisioning</b> for\n       small jobs. Placing small instance types at the top may cause the compute environment to\n       reach Amazon EC2 instance count limits before reaching <code>maxvCpus</code>.</p>\n               </important>\n               <p>Batch selects instance types in the order they appear in the\n      <code>instanceTypes</code> list, but <b>optimizes for capacity\n      first</b>. The customer-defined priority is honored on a best-effort basis. When Spot\n      Instance capacity pools are similarly available, priority order is respected. When capacity is\n      constrained, Batch selects from the most available pools regardless of priority to minimize\n      the likelihood of Spot Instance interruptions. This strategy is only available for Spot\n      Instance compute resources.</p>\n            </dd>\n         </dl>\n         <p>With any allocation strategy except <code>BEST_FIT</code> using On-Demand\n    (<code>EC2</code>) compute resources, Batch might need to exceed <code>maxvCpus</code> to meet your\n    capacity requirements. In this event, Batch never exceeds <code>maxvCpus</code> by more than\n    a single instance.</p>"
           }
         },
         "minvCpus": {
@@ -1856,7 +2152,7 @@
           "target": "com.amazonaws.batch#Integer",
           "traits": {
             "smithy.api#clientOptional": {},
-            "smithy.api#documentation": "<p>The maximum number of vCPUs that a compute environment can support.</p>\n         <note>\n            <p>With <code>BEST_FIT_PROGRESSIVE</code>,<code>SPOT_CAPACITY_OPTIMIZED</code> and\n     <code>SPOT_PRICE_CAPACITY_OPTIMIZED</code> (recommended) strategies using On-Demand or Spot Instances, \n     and the <code>BEST_FIT</code> strategy using Spot Instances, Batch might need to exceed\n     <code>maxvCpus</code> to meet your capacity requirements. In this event, Batch never exceeds\n     <code>maxvCpus</code> by more than a single instance.</p>\n         </note>",
+            "smithy.api#documentation": "<p>The maximum number of vCPUs that a compute environment can support.</p>\n         <note>\n            <p>With any allocation strategy except <code>BEST_FIT</code> using On-Demand\n     (<code>EC2</code>) compute resources, Batch might need to exceed <code>maxvCpus</code> to meet your\n     capacity requirements. In this event, Batch never exceeds <code>maxvCpus</code> by more than\n     a single instance.</p>\n         </note>",
             "smithy.api#required": {}
           }
         },
@@ -1869,7 +2165,7 @@
         "instanceTypes": {
           "target": "com.amazonaws.batch#StringList",
           "traits": {
-            "smithy.api#documentation": "<p>The instances types that can be launched. You can specify instance families to launch any\n   instance type within those families (for example, <code>c5</code> or <code>p3</code>), or you can\n   specify specific sizes within a family (such as <code>c5.8xlarge</code>). </p>\n         <p>Batch can select the instance type for you if you choose one of the following:</p>\n         <ul>\n            <li>\n               <p>\n                  <code>optimal</code> to select instance types (from the <code>c4</code>, <code>m4</code>,\n    <code>r4</code>, <code>c5</code>, <code>m5</code>, and <code>r5</code>\n    instance families) that match the demand of your job queues. </p>\n            </li>\n            <li>\n               <p>\n                  <code>default_x86_64</code> to choose x86 based instance types (from the <code>m6i</code>,\n     <code>c6i</code>, <code>r6i</code>, and <code>c7i</code> instance families) that matches the resource demands of the job queue.</p>\n            </li>\n            <li>\n               <p>\n                  <code>default_arm64</code> to choose ARM based instance types (from the <code>m6g</code>,\n     <code>c6g</code>, <code>r6g</code>, and <code>c7g</code> instance families) that matches the resource demands of the job queue.</p>\n            </li>\n         </ul>\n         <note>\n            <p>Starting on 11/01/2025 the behavior of <code>optimal</code> is going to be changed to match\n     <code>default_x86_64</code>.  During the change your instance families could be updated to a\n    newer generation. You do not need to perform any actions for the upgrade to happen. For more\n    information about change, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/optimal-default-instance-troubleshooting.html\">Optimal instance type configuration to receive automatic instance family\n    updates</a>.</p>\n         </note>\n         <note>\n            <p>Instance family availability varies by Amazon Web Services Region. For example, some Amazon Web Services Regions may not have any fourth generation instance families but have fifth and\n    sixth generation instance families.</p>\n            <p>When using <code>default_x86_64</code> or <code>default_arm64</code> instance bundles,\n    Batch selects instance families based on a balance of cost-effectiveness and performance.\n    While newer generation instances often provide better price-performance, Batch may choose an\n    earlier generation instance family if it provides the optimal combination of availability, cost,\n    and performance for your workload. For example, in an Amazon Web Services Region where both c6i\n    and c7i instances are available, Batch might select c6i instances if they offer better\n    cost-effectiveness for your specific job requirements. For more information on Batch instance\n    types and Amazon Web Services Region availability, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/instance-type-compute-table.html\">Instance\n     type compute table</a> in the <i>Batch User Guide</i>.</p>\n            <p>Batch periodically updates your instances in default bundles to newer,\n    more cost-effective options. Updates happen automatically without requiring any\n    action from you. Your workloads continue running during updates with no interruption\n   </p>\n         </note>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>\n         <note>\n            <p>When you create a compute environment, the instance types that you select for the compute environment must\n    share the same architecture. For example, you can't mix x86 and ARM instances in the same compute\n    environment.</p>\n         </note>"
+            "smithy.api#documentation": "<p>The instances types that can be launched. You can specify instance families to launch any\n   instance type within those families (for example, <code>c5</code> or <code>p3</code>), or you can\n   specify specific sizes within a family (such as <code>c5.8xlarge</code>).</p>\n         <p>Batch can select the instance type for you if you choose one of the following:</p>\n         <ul>\n            <li>\n               <p>\n                  <code>default_x86_64</code> to choose x86 based instance types (from the <code>m6i</code>,\n     <code>c6i</code>, <code>r6i</code>, and <code>c7i</code> instance families) that matches the resource demands of the job queue.</p>\n            </li>\n            <li>\n               <p>\n                  <code>default_arm64</code> to choose ARM based instance types (from the <code>m6g</code>,\n     <code>c6g</code>, <code>r6g</code>, and <code>c7g</code> instance families) that matches the resource demands of the job queue.</p>\n            </li>\n            <li>\n               <p>\n                  <code>optimal</code> Semantically equivalent to <code>default_x86_64</code>, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/optimal-default-instance-troubleshooting.html\">Optimal instance type configuration to receive automatic instance family\n    updates</a> for details.</p>\n            </li>\n         </ul>\n         <note>\n            <p>Instance family availability varies by Amazon Web Services Region. For example, some Amazon Web Services Regions may not have any fourth generation instance families but have fifth and\n    sixth generation instance families.</p>\n            <p>When using <code>default_x86_64</code> or <code>default_arm64</code> instance bundles,\n    Batch selects instance families based on a balance of cost-effectiveness and performance.\n    While newer generation instances often provide better price-performance, Batch may choose an\n    earlier generation instance family if it provides the optimal combination of availability, cost,\n    and performance for your workload. For example, in an Amazon Web Services Region where both c6i\n    and c7i instances are available, Batch might select c6i instances if they offer better\n    cost-effectiveness for your specific job requirements. For more information on Batch instance\n    types and Amazon Web Services Region availability, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/instance-type-compute-table.html\">Instance\n     type compute table</a> in the <i>Batch User Guide</i>.</p>\n            <p>Batch periodically updates your instances in default bundles to newer,\n    more cost-effective options. Updates happen automatically without requiring any\n    action from you. Your workloads continue running during updates with no interruption\n   </p>\n         </note>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>\n         <note>\n            <p>When you create a compute environment, the instance types that you select for the compute environment must\n    share the same architecture. For example, you can't mix x86 and ARM instances in the same compute\n    environment.</p>\n         </note>"
           }
         },
         "imageId": {
@@ -1878,15 +2174,13 @@
             "smithy.api#deprecated": {
               "message": "This field is deprecated, use ec2Configuration[].imageIdOverride instead."
             },
-            "smithy.api#documentation": "<p>The Amazon Machine Image (AMI) ID used for instances launched in the compute environment.\n   This parameter is overridden by the <code>imageIdOverride</code> member of the\n    <code>Ec2Configuration</code> structure.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>\n         <note>\n            <p>The AMI that you choose for a compute environment must match the architecture of the instance types that\n    you intend to use for that compute environment. For example, if your compute environment uses A1 instance types,\n    the compute resource AMI that you choose must support ARM instances. Amazon ECS vends both x86 and ARM versions of the\n    Amazon ECS-optimized Amazon Linux 2 AMI. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#ecs-optimized-ami-linux-variants.html\">Amazon ECS-optimized\n    Amazon Linux 2 AMI</a>\n    in the <i>Amazon Elastic Container Service Developer Guide</i>.</p>\n         </note>"
+            "smithy.api#documentation": "<p>The Amazon Machine Image (AMI) ID used for instances launched in the compute environment.\n   This parameter is overridden by the <code>imageIdOverride</code> member of the\n    <code>Ec2Configuration</code> structure.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>\n         <note>\n            <p>The AMI that you choose for a compute environment must match the architecture of the instance types that\n    you intend to use for that compute environment. For example, if your compute environment uses A1 instance types,\n    the compute resource AMI that you choose must support ARM instances. Amazon ECS vends both x86 and ARM versions of the\n    Amazon ECS-optimized Amazon Linux 2023 AMI. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#ecs-optimized-ami-linux-variants.html\">Amazon ECS-optimized\n    Amazon Linux 2023 AMI</a>\n    in the <i>Amazon Elastic Container Service Developer Guide</i>.</p>\n         </note>"
           }
         },
         "subnets": {
           "target": "com.amazonaws.batch#StringList",
           "traits": {
-            "smithy.api#clientOptional": {},
-            "smithy.api#documentation": "<p>The VPC subnets where the compute resources are launched. These subnets must be within the\n   same VPC. Fargate compute resources can contain up to 16 subnets. For more information, see\n    <a href=\"https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html\">VPCs and subnets</a>\n   in the <i>Amazon VPC User Guide</i>.</p>\n         <note>\n            <p>Batch on Amazon EC2 and Batch on Amazon EKS support Local Zones. For more information, see <a href=\"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-local-zones\"> Local\n     Zones</a> in the <i>Amazon EC2 User Guide for Linux Instances</i>, <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/local-zones.html\">Amazon EKS and Amazon Web Services Local\n     Zones</a> in the <i>Amazon EKS User Guide</i> and <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-regions-zones.html#clusters-local-zones\"> Amazon ECS\n     clusters in Local Zones, Wavelength Zones, and Amazon Web Services Outposts</a> in the <i>Amazon ECS\n     Developer Guide</i>.</p>\n            <p>Batch on Fargate doesn't currently support Local Zones.</p>\n         </note>",
-            "smithy.api#required": {}
+            "smithy.api#documentation": "<p>The VPC subnets where the compute resources are launched. These subnets must be within the\n   same VPC. Fargate compute resources can contain up to 16 subnets. For more information, see\n    <a href=\"https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html\">VPCs and subnets</a>\n   in the <i>Amazon VPC User Guide</i>. This parameter is required for compute\n   environments using <code>EC2</code>, <code>SPOT</code>, <code>FARGATE</code>, or\n   <code>FARGATE_SPOT</code> compute resources.</p>\n         <note>\n            <p>Batch on Amazon EC2 and Batch on Amazon EKS support Local Zones. For more information, see <a href=\"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-local-zones\"> Local\n     Zones</a> in the <i>Amazon EC2 User Guide for Linux Instances</i>, <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/local-zones.html\">Amazon EKS and Amazon Web Services Local\n     Zones</a> in the <i>Amazon EKS User Guide</i> and <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-regions-zones.html#clusters-local-zones\"> Amazon ECS\n     clusters in Local Zones, Wavelength Zones, and Amazon Web Services Outposts</a> in the <i>Amazon ECS\n     Developer Guide</i>.</p>\n            <p>Batch on Fargate doesn't currently support Local Zones.</p>\n         </note>"
           }
         },
         "securityGroupIds": {
@@ -1940,7 +2234,13 @@
         "ec2Configuration": {
           "target": "com.amazonaws.batch#Ec2ConfigurationList",
           "traits": {
-            "smithy.api#documentation": "<p>Provides information that's used to select Amazon Machine Images (AMIs) for Amazon EC2 instances\n   in the compute environment. If <code>Ec2Configuration</code> isn't specified, the default is\n    <code>ECS_AL2</code>.</p>\n         <p>One or two values can be provided.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>"
+            "smithy.api#documentation": "<p>Provides information that's used to select Amazon Machine Images (AMIs) for Amazon EC2 instances\n   in the compute environment. If <code>Ec2Configuration</code> isn't specified, the default is\n    <code>ECS_AL2023</code> for EC2 (ECS) compute environments and <code>EKS_AL2023</code> for EKS compute environments.</p>\n         <p>One or two values can be provided.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>"
+          }
+        },
+        "scalingPolicy": {
+          "target": "com.amazonaws.batch#ComputeScalingPolicy",
+          "traits": {
+            "smithy.api#documentation": "<p>The scaling policy configuration for the compute environment.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>"
           }
         }
       },
@@ -1960,7 +2260,7 @@
         "maxvCpus": {
           "target": "com.amazonaws.batch#Integer",
           "traits": {
-            "smithy.api#documentation": "<p>The maximum number of Amazon EC2 vCPUs that an environment can reach.</p>\n         <note>\n            <p>With <code>BEST_FIT_PROGRESSIVE</code>,<code>SPOT_CAPACITY_OPTIMIZED</code> and\n     <code>SPOT_PRICE_CAPACITY_OPTIMIZED</code> (recommended) strategies using On-Demand or Spot \n     Instances, and the <code>BEST_FIT</code> strategy using Spot Instances, Batch might need to \n     exceed <code>maxvCpus</code> to meet your capacity requirements. In this event, Batch never \n     exceeds <code>maxvCpus</code> by more than a single instance.</p>\n         </note>"
+            "smithy.api#documentation": "<p>The maximum number of Amazon EC2 vCPUs that an environment can reach.</p>\n         <note>\n            <p>With any allocation strategy except <code>BEST_FIT</code> using On-Demand\n     (<code>EC2</code>) compute resources, Batch might need to exceed <code>maxvCpus</code> to meet your\n     capacity requirements. In this event, Batch never exceeds <code>maxvCpus</code> by more than\n     a single instance.</p>\n         </note>"
           }
         },
         "desiredvCpus": {
@@ -1984,7 +2284,7 @@
         "allocationStrategy": {
           "target": "com.amazonaws.batch#CRUpdateAllocationStrategy",
           "traits": {
-            "smithy.api#documentation": "<p>The allocation strategy to use for the compute resource if there's not enough instances of\n   the best fitting instance type that can be allocated. This might be because of availability of\n   the instance type in the Region or <a href=\"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html\">Amazon EC2 service limits</a>. For more\n   information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/allocation-strategies.html\">Allocation strategies</a> in the <i>Batch User Guide</i>.</p>\n         <p>When updating a compute environment, changing the allocation strategy requires an\n   infrastructure update of the compute environment. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/updating-compute-environments.html\">Updating compute\n    environments</a> in the <i>Batch User Guide</i>. <code>BEST_FIT</code> isn't\n   supported when updating a compute environment.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>\n         <dl>\n            <dt>BEST_FIT_PROGRESSIVE</dt>\n            <dd>\n               <p>Batch selects additional instance types that are large enough to meet the requirements\n      of the jobs in the queue. Its preference is for instance types with lower cost vCPUs. If\n      additional instances of the previously selected instance types aren't available, Batch\n      selects new instance types.</p>\n            </dd>\n            <dt>SPOT_CAPACITY_OPTIMIZED</dt>\n            <dd>\n               <p>Batch selects one or more instance types that are large enough to meet the requirements\n      of the jobs in the queue. Its preference is for instance types that are less likely to be\n      interrupted. This allocation strategy is only available for Spot Instance compute\n      resources.</p>\n            </dd>\n            <dt>SPOT_PRICE_CAPACITY_OPTIMIZED</dt>\n            <dd>\n               <p>The price and capacity optimized allocation strategy looks at both price and capacity to\n      select the Spot Instance pools that are the least likely to be interrupted and have the lowest\n      possible price. This allocation strategy is only available for Spot Instance compute\n      resources.</p>\n            </dd>\n         </dl>\n         <p>With <code>BEST_FIT_PROGRESSIVE</code>,<code>SPOT_CAPACITY_OPTIMIZED</code> and\n    <code>SPOT_PRICE_CAPACITY_OPTIMIZED</code> (recommended) strategies using On-Demand or Spot Instances, \n    and the <code>BEST_FIT</code> strategy using Spot Instances, Batch might need to exceed\n    <code>maxvCpus</code> to meet your capacity requirements. In this event, Batch never exceeds\n    <code>maxvCpus</code> by more than a single instance.</p>"
+            "smithy.api#documentation": "<p>The allocation strategy to use for the compute resource if there's not enough instances of\n the best fitting instance type that can be allocated. This might be because of availability of\n the instance type in the Region or <a href=\"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html\">Amazon EC2 service limits</a>. For more\n information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/allocation-strategies.html\">Allocation strategies</a> in the <i>Batch User Guide</i>.</p>\n         <p>When updating a compute environment, changing the allocation strategy requires an\n infrastructure update of the compute environment. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/updating-compute-environments.html\">Updating compute\n environments</a> in the <i>Batch User Guide</i>. <code>BEST_FIT</code> isn't\n supported when updating a compute environment.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>\n         <dl>\n            <dt>BEST_FIT_PROGRESSIVE</dt>\n            <dd>\n               <p>Batch selects additional instance types that are large enough to meet the requirements\n      of the jobs in the queue. Its preference is for instance types with lower cost vCPUs. If\n      additional instances of the previously selected instance types aren't available, Batch\n      selects new instance types.</p>\n            </dd>\n            <dt>BEST_FIT_PROGRESSIVE_ORDERED</dt>\n            <dd>\n               <important>\n                  <p>This is an advanced allocation strategy only for customers who want to control which\n       instance types are preferred during scaling.</p>\n                  <p>Placing large instance types at the top of the list may result in <b>over-provisioning</b> for\n       small jobs. Placing small instance types at the top may cause the compute environment to\n       reach Amazon EC2 instance count limits before reaching <code>maxvCpus</code>.</p>\n               </important>\n               <p>Batch selects instance types in the order they appear in the\n      <code>instanceTypes</code> list. When an instance family is specified, sizes within that\n      family are expanded using <code>BEST_FIT_PROGRESSIVE</code> logic\u2014preferring sizes that\n      best fit the jobs, with larger sizes as fallback. Instance types that cannot meet the resource\n      requirements of the jobs are skipped. This strategy is only available for On-Demand Instance\n      (<code>EC2</code>) compute resources.</p>\n               <p>If an instance family and an explicit instance type from that family both appear in\n      <code>instanceTypes</code>, the explicit type takes its listed position and is excluded from\n      the family expansion. For example, in <code>[\"m7a.4xlarge\", \"m7a\", \"m6a\"]</code>,\n      <code>m7a.4xlarge</code> is always placed first and is excluded from the <code>m7a</code>\n      family expansion.</p>\n            </dd>\n            <dt>SPOT_CAPACITY_OPTIMIZED</dt>\n            <dd>\n               <p>Batch selects one or more instance types that are large enough to meet the requirements\n      of the jobs in the queue. Its preference is for instance types that are less likely to be\n      interrupted. This allocation strategy is only available for Spot Instance compute\n      resources.</p>\n            </dd>\n            <dt>SPOT_PRICE_CAPACITY_OPTIMIZED</dt>\n            <dd>\n               <p>The price and capacity optimized allocation strategy looks at both price and capacity to\n      select the Spot Instance pools that are the least likely to be interrupted and have the lowest\n      possible price. This allocation strategy is only available for Spot Instance compute\n      resources.</p>\n            </dd>\n            <dt>SPOT_CAPACITY_OPTIMIZED_PRIORITIZED</dt>\n            <dd>\n               <important>\n                  <p>This is an advanced allocation strategy for customers who want to influence instance\n       type selection during scaling. This strategy optimizes for <b>capacity\n       first</b>, and honors instance type priorities on a best-effort basis (priorities are\n       honored when they do not significantly reduce available Spot capacity).</p>\n                  <p>Placing large instance types at the top of the list may result in <b>over-provisioning</b> for\n       small jobs. Placing small instance types at the top may cause the compute environment to\n       reach Amazon EC2 instance count limits before reaching <code>maxvCpus</code>.</p>\n               </important>\n               <p>Batch selects instance types in the order they appear in the\n      <code>instanceTypes</code> list, but <b>optimizes for capacity\n      first</b>. The customer-defined priority is honored on a best-effort basis. When Spot\n      Instance capacity pools are similarly available, priority order is respected. When capacity is\n      constrained, Batch selects from the most available pools regardless of priority to minimize\n      the likelihood of Spot Instance interruptions. This strategy is only available for Spot\n      Instance compute resources.</p>\n            </dd>\n         </dl>\n         <p>With any allocation strategy except <code>BEST_FIT</code> using On-Demand\n    (<code>EC2</code>) compute resources, Batch might need to exceed <code>maxvCpus</code> to meet your\n    capacity requirements. In this event, Batch never exceeds <code>maxvCpus</code> by more than\n    a single instance.</p>"
           }
         },
         "instanceTypes": {
@@ -2032,7 +2332,7 @@
         "ec2Configuration": {
           "target": "com.amazonaws.batch#Ec2ConfigurationList",
           "traits": {
-            "smithy.api#documentation": "<p>Provides information used to select Amazon Machine Images (AMIs) for Amazon EC2 instances in the\n   compute environment. If <code>Ec2Configuration</code> isn't specified, the default is\n    <code>ECS_AL2</code>.</p>\n         <p>When updating a compute environment, changing this setting requires an infrastructure update\n   of the compute environment. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/updating-compute-environments.html\">Updating compute environments</a> in the\n    <i>Batch User Guide</i>. To remove the Amazon EC2 configuration and any custom AMI ID\n   specified in <code>imageIdOverride</code>, set this value to an empty string.</p>\n         <p>One or two values can be provided.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>"
+            "smithy.api#documentation": "<p>Provides information used to select Amazon Machine Images (AMIs) for Amazon EC2 instances in the\n   compute environment. If <code>Ec2Configuration</code> isn't specified, the default is\n    <code>ECS_AL2023</code> for EC2 (ECS) compute environments and <code>EKS_AL2023</code> for EKS compute environments.</p>\n         <p>When updating a compute environment, changing this setting requires an infrastructure update\n   of the compute environment. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/updating-compute-environments.html\">Updating compute environments</a> in the\n    <i>Batch User Guide</i>. To remove the Amazon EC2 configuration and any custom AMI ID\n   specified in <code>imageIdOverride</code>, set this value to an empty string.</p>\n         <p>One or two values can be provided.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>"
           }
         },
         "updateToLatestImageVersion": {
@@ -2050,12 +2350,32 @@
         "imageId": {
           "target": "com.amazonaws.batch#String",
           "traits": {
-            "smithy.api#documentation": "<p>The Amazon Machine Image (AMI) ID used for instances launched in the compute environment.\n   This parameter is overridden by the <code>imageIdOverride</code> member of the\n    <code>Ec2Configuration</code> structure. To remove the custom AMI ID and use the default AMI ID,\n   set this value to an empty string.</p>\n         <p>When updating a compute environment, changing the AMI ID requires an infrastructure update\n   of the compute environment. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/updating-compute-environments.html\">Updating compute environments</a> in the\n    <i>Batch User Guide</i>.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>\n         <note>\n            <p>The AMI that you choose for a compute environment must match the architecture of the instance types that\n    you intend to use for that compute environment. For example, if your compute environment uses A1 instance types,\n    the compute resource AMI that you choose must support ARM instances. Amazon ECS vends both x86 and ARM versions of the\n    Amazon ECS-optimized Amazon Linux 2 AMI. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#ecs-optimized-ami-linux-variants.html\">Amazon ECS-optimized\n    Amazon Linux 2 AMI</a>\n    in the <i>Amazon Elastic Container Service Developer Guide</i>.</p>\n         </note>"
+            "smithy.api#documentation": "<p>The Amazon Machine Image (AMI) ID used for instances launched in the compute environment.\n   This parameter is overridden by the <code>imageIdOverride</code> member of the\n    <code>Ec2Configuration</code> structure. To remove the custom AMI ID and use the default AMI ID,\n   set this value to an empty string.</p>\n         <p>When updating a compute environment, changing the AMI ID requires an infrastructure update\n   of the compute environment. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/updating-compute-environments.html\">Updating compute environments</a> in the\n    <i>Batch User Guide</i>.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>\n         <note>\n            <p>The AMI that you choose for a compute environment must match the architecture of the instance types that\n    you intend to use for that compute environment. For example, if your compute environment uses A1 instance types,\n    the compute resource AMI that you choose must support ARM instances. Amazon ECS vends both x86 and ARM versions of the\n    Amazon ECS-optimized Amazon Linux 2023 AMI. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#ecs-optimized-ami-linux-variants.html\">Amazon ECS-optimized\n    Amazon Linux 2023 AMI</a>\n    in the <i>Amazon Elastic Container Service Developer Guide</i>.</p>\n         </note>"
+          }
+        },
+        "scalingPolicy": {
+          "target": "com.amazonaws.batch#ComputeScalingPolicy",
+          "traits": {
+            "smithy.api#documentation": "<p>The scaling policy configuration for the compute environment.</p>\n         <note>\n            <p>This parameter isn't applicable to jobs that are running on Fargate resources. Don't specify it.</p>\n         </note>"
           }
         }
       },
       "traits": {
         "smithy.api#documentation": "<p>An object that represents the attributes of a compute environment that can be updated. For\n   more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/updating-compute-environments.html\">Updating compute environments</a> in the\n    <i>Batch User Guide</i>.</p>"
+      }
+    },
+    "com.amazonaws.batch#ComputeScalingPolicy": {
+      "type": "structure",
+      "members": {
+        "minScaleDownDelayMinutes": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p>The minimum time (in minutes) that Batch keeps instances running in the compute environment \n   after their jobs complete. For each instance, the delay period begins when the last job finishes. \n   If no new jobs are placed on the instance during this delay, Batch terminates the instance once \n   the delay expires.</p>\n         <p>Valid Range: Minimum value of 20. Maximum value of 10080. Use 0 to unset and disable the scale down delay.</p>\n         <note>\n            <p>Idle instances retained during the scale-down delay period are billable at standard EC2 pricing.</p>\n         </note>\n         <note>\n            <p>The scale down delay does not apply to:</p>\n            <ul>\n               <li>\n                  <p>Instances being replaced during infrastructure updates</p>\n               </li>\n               <li>\n                  <p>Newly launched instances that have not yet run any jobs</p>\n               </li>\n               <li>\n                  <p>Spot instances reclaimed due to interruption</p>\n               </li>\n            </ul>\n         </note>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>An object that represents a scaling policy for a compute environment.</p>"
       }
     },
     "com.amazonaws.batch#ConsumableResourceList": {
@@ -2689,7 +3009,7 @@
         "state": {
           "target": "com.amazonaws.batch#CEState",
           "traits": {
-            "smithy.api#documentation": "<p>The state of the compute environment. If the state is <code>ENABLED</code>, then the\n      compute environment accepts jobs from a queue and can scale out automatically based on\n      queues.</p>\n         <p>If the state is <code>ENABLED</code>, then the Batch scheduler can attempt to place jobs\n      from an associated job queue on the compute resources within the environment. If the compute\n      environment is managed, then it can scale its instances out or in automatically, based on the\n      job queue demand.</p>\n         <p>If the state is <code>DISABLED</code>, then the Batch scheduler doesn't attempt to place\n      jobs within the environment. Jobs in a <code>STARTING</code> or <code>RUNNING</code> state\n      continue to progress normally. Managed compute environments in the <code>DISABLED</code> state\n      don't scale out. </p>\n         <note>\n            <p>Compute environments in a <code>DISABLED</code> state may continue to incur billing\n        charges. To prevent additional charges, turn off and then delete the compute environment.\n        For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/compute_environment_parameters.html#compute_environment_state\">State</a> in the <i>Batch User Guide</i>.</p>\n         </note>\n         <p>When an instance is idle, the instance scales down to the <code>minvCpus</code> value.\n      However, the instance size doesn't change. For example, consider a <code>c5.8xlarge</code>\n      instance with a <code>minvCpus</code> value of <code>4</code> and a <code>desiredvCpus</code>\n      value of <code>36</code>. This instance doesn't scale down to a <code>c5.large</code>\n      instance.</p>"
+            "smithy.api#documentation": "<p>The state of the compute environment. A compute environment must be created in the\n      <code>ENABLED</code> state.</p>\n         <p>If the state is <code>ENABLED</code>, then the\n      compute environment accepts jobs from a queue and can scale out automatically based on\n      queues.</p>\n         <p>If the state is <code>ENABLED</code>, then the Batch scheduler can attempt to place jobs\n      from an associated job queue on the compute resources within the environment. If the compute\n      environment is managed, then it can scale its instances out or in automatically, based on the\n      job queue demand.</p>\n         <p>If the state is <code>DISABLED</code>, then the Batch scheduler doesn't attempt to place\n      jobs within the environment. Jobs in a <code>STARTING</code> or <code>RUNNING</code> state\n      continue to progress normally. Managed compute environments in the <code>DISABLED</code> state\n      don't scale out. </p>\n         <note>\n            <p>Compute environments in a <code>DISABLED</code> state may continue to incur billing\n        charges, for example, if they have running instances due to jobs that are still executing or a non-zero <code>minvCpus</code> setting. To prevent additional charges, disable and delete the compute environment.</p>\n         </note>\n         <p>When an instance is idle, the instance scales down to the <code>minvCpus</code> value.\n      However, the instance size doesn't change. For example, consider a <code>c5.8xlarge</code>\n      instance with a <code>minvCpus</code> value of <code>4</code> and a <code>desiredvCpus</code>\n      value of <code>36</code>. This instance doesn't scale down to a <code>c5.large</code>\n      instance.</p>"
           }
         },
         "unmanagedvCpus": {
@@ -2707,7 +3027,7 @@
         "serviceRole": {
           "target": "com.amazonaws.batch#String",
           "traits": {
-            "smithy.api#documentation": "<p>The full Amazon Resource Name (ARN) of the IAM role that allows Batch to make calls to other Amazon Web Services\n      services on your behalf. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/service_IAM_role.html\">Batch service IAM role</a> in the\n        <i>Batch User Guide</i>.</p>\n         <important>\n            <p>If your account already created the Batch service-linked role, that role is used by\n        default for your compute environment unless you specify a different role here. If the\n        Batch service-linked role doesn't exist in your account, and no role is specified here,\n        the service attempts to create the Batch service-linked role in your account.</p>\n         </important>\n         <p>If your specified role has a path other than <code>/</code>, then you must specify either\n      the full role ARN (recommended) or prefix the role name with the path. For example, if a\n      role with the name <code>bar</code> has a path of <code>/foo/</code>, specify\n        <code>/foo/bar</code> as the role name. For more information, see <a href=\"https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names\">Friendly\n        names and paths</a> in the <i>IAM User Guide</i>.</p>\n         <note>\n            <p>Depending on how you created your Batch service role, its ARN might contain the\n          <code>service-role</code> path prefix. When you only specify the name of the service role,\n        Batch assumes that your ARN doesn't use the <code>service-role</code> path prefix. Because\n        of this, we recommend that you specify the full ARN of your service role when you create\n        compute environments.</p>\n         </note>"
+            "smithy.api#documentation": "<p>The full Amazon Resource Name (ARN) of the IAM role that allows Batch to make calls to other Amazon Web Services\n      services on your behalf. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/service_IAM_role.html\">Batch service IAM role</a> in the\n        <i>Batch User Guide</i>.</p>\n         <important>\n            <p>If your account already created the Batch service-linked role, that role is used by\n        default for your compute environment unless you specify a different role here. If the\n        Batch service-linked role doesn't exist in your account, and no role is specified here,\n        the service attempts to create the Batch service-linked role in your account.</p>\n            <p>This automatic service-linked role creation only applies to <code>MANAGED</code> compute\n        environments. For <code>UNMANAGED</code> compute environments, you must explicitly specify a\n        <code>serviceRole</code>.</p>\n         </important>\n         <p>If your specified role has a path other than <code>/</code>, then you must specify either\n      the full role ARN (recommended) or prefix the role name with the path. For example, if a\n      role with the name <code>bar</code> has a path of <code>/foo/</code>, specify\n        <code>/foo/bar</code> as the role name. For more information, see <a href=\"https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names\">Friendly\n        names and paths</a> in the <i>IAM User Guide</i>.</p>\n         <note>\n            <p>Depending on how you created your Batch service role, its ARN might contain the\n          <code>service-role</code> path prefix. When you only specify the name of the service role,\n        Batch assumes that your ARN doesn't use the <code>service-role</code> path prefix. Because\n        of this, we recommend that you specify the full ARN of your service role when you create\n        compute environments.</p>\n         </note>"
           }
         },
         "tags": {
@@ -3016,6 +3336,111 @@
         "smithy.api#output": {}
       }
     },
+    "com.amazonaws.batch#CreateQuotaShare": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.batch#CreateQuotaShareRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.batch#CreateQuotaShareResponse"
+      },
+      "errors": [
+        {
+          "target": "com.amazonaws.batch#ClientException"
+        },
+        {
+          "target": "com.amazonaws.batch#ServerException"
+        }
+      ],
+      "traits": {
+        "smithy.api#documentation": "<p>Creates an Batch quota share. Each quota share operates as a virtual queue with a configured compute capacity, resource sharing strategy, and borrow limits. </p>",
+        "smithy.api#http": {
+          "method": "POST",
+          "uri": "/v1/createquotashare",
+          "code": 200
+        }
+      }
+    },
+    "com.amazonaws.batch#CreateQuotaShareRequest": {
+      "type": "structure",
+      "members": {
+        "quotaShareName": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The name of the quota share. It can be up to 128 characters long. It can contain uppercase and\n      lowercase letters, numbers, hyphens (-), and underscores (_).</p>",
+            "smithy.api#required": {}
+          }
+        },
+        "jobQueue": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The Batch job queue associated with the quota share. This can be the job queue name or ARN.\n    A job queue must be in the <code>VALID</code> state before you can associate it with a quota share.</p>",
+            "smithy.api#required": {}
+          }
+        },
+        "capacityLimits": {
+          "target": "com.amazonaws.batch#QuotaShareCapacityLimits",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>A list that specifies the quantity and type of compute capacity allocated to the quota share. </p>",
+            "smithy.api#required": {}
+          }
+        },
+        "resourceSharingConfiguration": {
+          "target": "com.amazonaws.batch#QuotaShareResourceSharingConfiguration",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>Specifies whether a quota share reserves, lends, or both lends and borrows idle compute capacity.</p>",
+            "smithy.api#required": {}
+          }
+        },
+        "preemptionConfiguration": {
+          "target": "com.amazonaws.batch#QuotaSharePreemptionConfiguration",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>Specifies the preemption behavior for jobs in a quota share.</p>",
+            "smithy.api#required": {}
+          }
+        },
+        "state": {
+          "target": "com.amazonaws.batch#QuotaShareState",
+          "traits": {
+            "smithy.api#documentation": "<p>The state of the quota share. If the quota share is <code>ENABLED</code>, it is able to accept jobs.\n    If the quota share is <code>DISABLED</code>, new jobs won't be accepted but jobs already submitted can finish.\n    The default state is <code>ENABLED</code>.</p>"
+          }
+        },
+        "tags": {
+          "target": "com.amazonaws.batch#TagrisTagsMap",
+          "traits": {
+            "smithy.api#documentation": "<p>The tags that you apply to the quota share to help you categorize and organize your\n      resources. Each tag consists of a key and an optional value. For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/using-tags.html\">Tagging your Batch resources</a>\n      in <i>Batch User Guide</i>.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#input": {}
+      }
+    },
+    "com.amazonaws.batch#CreateQuotaShareResponse": {
+      "type": "structure",
+      "members": {
+        "quotaShareName": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The name of the quota share.</p>"
+          }
+        },
+        "quotaShareArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the quota share.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#output": {}
+      }
+    },
     "com.amazonaws.batch#CreateSchedulingPolicy": {
       "type": "operation",
       "input": {
@@ -3052,10 +3477,16 @@
             "smithy.api#required": {}
           }
         },
+        "quotaSharePolicy": {
+          "target": "com.amazonaws.batch#QuotaSharePolicy",
+          "traits": {
+            "smithy.api#documentation": "<p>The quota share scheduling policy details. Only one of fairsharePolicy or quotaSharePolicy can be set.\n        Once set, this policy type cannot be removed or changed to a fairSharePolicy.</p>"
+          }
+        },
         "fairsharePolicy": {
           "target": "com.amazonaws.batch#FairsharePolicy",
           "traits": {
-            "smithy.api#documentation": "<p>The fair-share scheduling policy details.</p>"
+            "smithy.api#documentation": "<p>The fair-share scheduling policy details. Only one of fairsharePolicy or quotaSharePolicy can be set.\n    Once set, this policy type cannot be removed or changed to a quotaSharePolicy.</p>"
           }
         },
         "tags": {
@@ -3321,7 +3752,7 @@
         }
       ],
       "traits": {
-        "smithy.api#documentation": "<p>Deletes the specified job queue. You must first disable submissions for a queue with the\n        <a>UpdateJobQueue</a> operation. All jobs in the queue are eventually terminated\n      when you delete a job queue. The jobs are terminated at a rate of about 16 jobs each\n      second.</p>\n         <p>It's not necessary to disassociate compute environments from a queue before submitting a\n        <code>DeleteJobQueue</code> request.</p>",
+        "smithy.api#documentation": "<p>Deletes the specified job queue. You must first disable submissions for a queue with the\n        <a>UpdateJobQueue</a> operation. All jobs in the queue are eventually terminated\n      when you delete a job queue.</p>\n         <p>It's not necessary to disassociate compute environments from a queue before submitting a\n        <code>DeleteJobQueue</code> request.</p>",
         "smithy.api#examples": [
           {
             "title": "To delete a job queue",
@@ -3357,6 +3788,54 @@
       }
     },
     "com.amazonaws.batch#DeleteJobQueueResponse": {
+      "type": "structure",
+      "members": {},
+      "traits": {
+        "smithy.api#output": {}
+      }
+    },
+    "com.amazonaws.batch#DeleteQuotaShare": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.batch#DeleteQuotaShareRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.batch#DeleteQuotaShareResponse"
+      },
+      "errors": [
+        {
+          "target": "com.amazonaws.batch#ClientException"
+        },
+        {
+          "target": "com.amazonaws.batch#ServerException"
+        }
+      ],
+      "traits": {
+        "smithy.api#documentation": "<p>Deletes the specified quota share. You must first disable submissions for the share by\n      updating the state to <code>DISABLED</code> using the <a>UpdateQuotaShare</a> operation.\n      All jobs in the share are eventually terminated when you delete a quota share.</p>",
+        "smithy.api#http": {
+          "method": "POST",
+          "uri": "/v1/deletequotashare",
+          "code": 200
+        }
+      }
+    },
+    "com.amazonaws.batch#DeleteQuotaShareRequest": {
+      "type": "structure",
+      "members": {
+        "quotaShareArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the quota share.</p>",
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#input": {}
+      }
+    },
+    "com.amazonaws.batch#DeleteQuotaShareResponse": {
       "type": "structure",
       "members": {},
       "traits": {
@@ -4115,6 +4594,109 @@
         "smithy.api#output": {}
       }
     },
+    "com.amazonaws.batch#DescribeQuotaShare": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.batch#DescribeQuotaShareRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.batch#DescribeQuotaShareResponse"
+      },
+      "errors": [
+        {
+          "target": "com.amazonaws.batch#ClientException"
+        },
+        {
+          "target": "com.amazonaws.batch#ServerException"
+        }
+      ],
+      "traits": {
+        "smithy.api#documentation": "<p>Returns a description of the specified quota share.</p>",
+        "smithy.api#http": {
+          "method": "POST",
+          "uri": "/v1/describequotashare",
+          "code": 200
+        }
+      }
+    },
+    "com.amazonaws.batch#DescribeQuotaShareRequest": {
+      "type": "structure",
+      "members": {
+        "quotaShareArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the quota share.</p>",
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#input": {}
+      }
+    },
+    "com.amazonaws.batch#DescribeQuotaShareResponse": {
+      "type": "structure",
+      "members": {
+        "quotaShareName": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The name of the quota share.</p>"
+          }
+        },
+        "quotaShareArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the quota share.</p>"
+          }
+        },
+        "jobQueueArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The ARN of the job queue associated with the quota share.</p>"
+          }
+        },
+        "capacityLimits": {
+          "target": "com.amazonaws.batch#QuotaShareCapacityLimits",
+          "traits": {
+            "smithy.api#documentation": "<p>A list that specifies the quantity and type of compute capacity allocated to the quota share.</p>"
+          }
+        },
+        "resourceSharingConfiguration": {
+          "target": "com.amazonaws.batch#QuotaShareResourceSharingConfiguration",
+          "traits": {
+            "smithy.api#documentation": "<p>Specifies whether a quota share reserves, lends, or both lends and borrows idle compute capacity.</p>"
+          }
+        },
+        "preemptionConfiguration": {
+          "target": "com.amazonaws.batch#QuotaSharePreemptionConfiguration",
+          "traits": {
+            "smithy.api#documentation": "<p>Specifies the preemption behavior for jobs in a quota share.</p>"
+          }
+        },
+        "state": {
+          "target": "com.amazonaws.batch#QuotaShareState",
+          "traits": {
+            "smithy.api#documentation": "<p>The state of the quota share.</p>"
+          }
+        },
+        "status": {
+          "target": "com.amazonaws.batch#QuotaShareStatus",
+          "traits": {
+            "smithy.api#documentation": "<p>The current status of the quota share.</p>"
+          }
+        },
+        "tags": {
+          "target": "com.amazonaws.batch#TagrisTagsMap",
+          "traits": {
+            "smithy.api#documentation": "<p>The tags applied to the quota share.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#output": {}
+      }
+    },
     "com.amazonaws.batch#DescribeSchedulingPolicies": {
       "type": "operation",
       "input": {
@@ -4298,6 +4880,12 @@
             "smithy.api#documentation": "<p>A list of job attempts associated with the service job.</p>"
           }
         },
+        "capacityUsage": {
+          "target": "com.amazonaws.batch#ServiceJobCapacityUsageDetailList",
+          "traits": {
+            "smithy.api#documentation": "<p>The configured capacity for the service job, such as the number of instances. The\n            number of instances should be the same value as the\n                <code>serviceRequestPayload.InstanceCount</code> field.</p>"
+          }
+        },
         "createdAt": {
           "target": "com.amazonaws.batch#Long",
           "traits": {
@@ -4352,6 +4940,12 @@
             "smithy.api#documentation": "<p>The retry strategy to use for failed service jobs that are submitted with this service job.</p>"
           }
         },
+        "scheduledAt": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the service job was scheduled. This\n            represents when the service job was dispatched to SageMaker and the service job transitioned to the\n                <code>SCHEDULED</code> state.</p>"
+          }
+        },
         "schedulingPriority": {
           "target": "com.amazonaws.batch#Integer",
           "traits": {
@@ -4376,6 +4970,24 @@
           "target": "com.amazonaws.batch#String",
           "traits": {
             "smithy.api#documentation": "<p>The share identifier for the service job. This is used for fair-share scheduling.</p>"
+          }
+        },
+        "quotaShareName": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The name of the quota share that the service job is associated with.</p>"
+          }
+        },
+        "preemptionConfiguration": {
+          "target": "com.amazonaws.batch#ServiceJobPreemptionConfiguration",
+          "traits": {
+            "smithy.api#documentation": "<p>Specifies the service job behavior when preempted.</p>"
+          }
+        },
+        "preemptionSummary": {
+          "target": "com.amazonaws.batch#ServiceJobPreemptionSummary",
+          "traits": {
+            "smithy.api#documentation": "<p>Summarizes the preemptions of the service job. This field appears on a service job\n        when it has been preempted.</p>"
           }
         },
         "startedAt": {
@@ -4486,6 +5098,9 @@
         "target": "com.amazonaws.batch#Device"
       }
     },
+    "com.amazonaws.batch#Double": {
+      "type": "double"
+    },
     "com.amazonaws.batch#EFSAuthorizationConfig": {
       "type": "structure",
       "members": {
@@ -4587,14 +5202,20 @@
           "target": "com.amazonaws.batch#ImageType",
           "traits": {
             "smithy.api#clientOptional": {},
-            "smithy.api#documentation": "<p>The image type to match with the instance type to select an AMI. The supported values are\n   different for <code>ECS</code> and <code>EKS</code> resources.</p>\n         <dl>\n            <dt>ECS</dt>\n            <dd>\n               <p>If the <code>imageIdOverride</code> parameter isn't specified, then a recent <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#al2ami\">Amazon ECS-optimized Amazon Linux 2 AMI</a> (<code>ECS_AL2</code>) is used. If a new image type is\n      specified in an update, but neither an <code>imageId</code> nor a <code>imageIdOverride</code>\n      parameter is specified, then the latest Amazon ECS optimized AMI for that image type that's\n      supported by Batch is used.</p>\n               <important>\n                  <p>Amazon Web Services will end support for Amazon ECS optimized AL2-optimized and AL2-accelerated AMIs. Starting in January 2026, Batch will change\n       the default AMI for new Amazon ECS compute environments from Amazon Linux 2 to Amazon Linux 2023.\n       We recommend migrating Batch Amazon ECS compute environments to Amazon Linux 2023 to maintain\n       optimal performance and security. For more information on upgrading from AL2 to AL2023, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/ecs-migration-2023.html\">How to migrate\n        from ECS AL2 to ECS AL2023</a> in the <i>Batch User Guide</i>.</p>\n               </important>\n               <dl>\n                  <dt>ECS_AL2</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#al2ami\">Amazon Linux\n         2</a>: Default for all non-GPU instance families.</p>\n                  </dd>\n                  <dt>ECS_AL2_NVIDIA</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#gpuami\">Amazon Linux 2\n          (GPU)</a>: Default for all GPU instance families (for example <code>P4</code> and\n          <code>G4</code>) and can be used for all non Amazon Web Services Graviton-based instance types.</p>\n                  </dd>\n                  <dt>ECS_AL2023</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html\">Amazon Linux 2023</a>: Batch\n         supports Amazon Linux 2023.</p>\n                     <note>\n                        <p>Amazon Linux 2023 does not support <code>A1</code> instances.</p>\n                     </note>\n                  </dd>\n                  <dt>ECS_AL2023_NVIDIA</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#gpuami\">Amazon Linux 2023\n          (GPU)</a>: For all GPU instance families and can be used for all non Amazon Web Services Graviton-based instance types.</p>\n                     <note>\n                        <p>ECS_AL2023_NVIDIA doesn't support <code>p3</code> and <code>g3</code> instance types.</p>\n                     </note>\n                  </dd>\n               </dl>\n            </dd>\n            <dt>EKS</dt>\n            <dd>\n               <p>If the <code>imageIdOverride</code> parameter isn't specified, then a recent <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon EKS-optimized Amazon Linux 2023\n       AMI</a> (<code>EKS_AL2023</code>) is used. If a new image type is specified in an update,\n      but neither an <code>imageId</code> nor a <code>imageIdOverride</code> parameter is specified,\n      then the latest Amazon EKS optimized AMI for that image type that Batch supports is used.</p>\n               <important>\n                  <p>Amazon Linux 2023 AMIs are the\n       default on Batch for Amazon EKS.</p>\n                  <p>Amazon Web Services will end\n       support for Amazon EKS AL2-optimized and AL2-accelerated AMIs, starting 11/26/25. You can continue\n       using Batch-provided Amazon EKS optimized Amazon Linux 2 AMIs on your Amazon EKS compute\n       environments beyond the 11/26/25 end-of-support date, these compute environments will no\n       longer receive any new software updates, security patches, or bug fixes from\n       Amazon Web Services. For more information on upgrading from AL2 to AL2023, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/eks-migration-2023.html\">How to upgrade from EKS AL2 to EKS AL2023</a> in the <i>Batch User Guide</i>.</p>\n               </important>\n               <dl>\n                  <dt>EKS_AL2</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon\n          Linux 2</a>: Used for non-GPU instance families.</p>\n                  </dd>\n                  <dt>EKS_AL2_NVIDIA</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon\n          Linux 2 (accelerated)</a>: Used for GPU instance families (for example,\n          <code>P4</code> and <code>G4</code>) and can be used for all non Amazon Web Services Graviton-based\n         instance types.</p>\n                  </dd>\n                  <dt>EKS_AL2023</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon\n         Linux 2023</a>: Default for non-GPU instance families.</p>\n                     <note>\n                        <p>Amazon Linux 2023 does not support <code>A1</code> instances.</p>\n                     </note>\n                  </dd>\n                  <dt>EKS_AL2023_NVIDIA</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon\n          Linux 2023 (accelerated)</a>: Default for GPU instance families and can be used for all non Amazon Web Services\n         Graviton-based instance types.</p>\n                  </dd>\n               </dl>\n            </dd>\n         </dl>",
+            "smithy.api#documentation": "<p>The image type to match with the instance type to select an AMI. The supported values are\n   different for <code>ECS</code> and <code>EKS</code> resources.</p>\n         <dl>\n            <dt>ECS</dt>\n            <dd>\n               <p>If the <code>imageIdOverride</code> parameter isn't specified, then a recent <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html\">Amazon ECS-optimized Amazon Linux 2023 AMI</a> (<code>ECS_AL2023</code>) is used. If a new image type is\n      specified in an update, but neither an <code>imageId</code> nor a <code>imageIdOverride</code>\n      parameter is specified, then the latest Amazon ECS optimized AMI for that image type that's\n      supported by Batch is used.</p>\n               <important>\n                  <p>Amazon Web Services is ending support for Amazon ECS Amazon Linux 2-optimized and accelerated AMIs on June 30,\n       2026. On January 12, 2026, Batch changed the default AMI for new Amazon ECS compute environments\n       from Amazon Linux 2 to Amazon Linux 2023. Effective June 30, 2026, Batch will block creation\n       of new Amazon ECS compute environments using Batch-provided Amazon Linux 2 AMIs. We strongly recommend\n       migrating your existing Batch Amazon ECS compute environments to Amazon Linux 2023 prior to June 30,\n       2026. For more information on upgrading from AL2 to AL2023, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/ecs-migration-2023.html\">How to migrate\n        from ECS AL2 to ECS AL2023</a> in the <i>Batch User Guide</i>.</p>\n               </important>\n               <dl>\n                  <dt>ECS_AL2</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html\">Amazon Linux\n         2</a>: Used for non-GPU instance families.</p>\n                  </dd>\n                  <dt>ECS_AL2_NVIDIA</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#gpuami\">Amazon Linux 2\n          (GPU)</a>: Used for GPU instance families (for example <code>P4</code> and\n          <code>G4</code>) and non Amazon Web Services Graviton-based instance types.</p>\n                  </dd>\n                  <dt>ECS_AL2023</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html\">Amazon Linux 2023</a>: Default \n         for all non-GPU instance families.</p>\n                     <note>\n                        <p>Amazon Linux 2023 does not support <code>A1</code> instances.</p>\n                     </note>\n                  </dd>\n                  <dt>ECS_AL2023_NVIDIA</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#gpuami\">Amazon Linux 2023\n          (GPU)</a>: Default for all GPU instance families and can be used for all non Amazon Web Services Graviton-based instance types.</p>\n                     <note>\n                        <p>ECS_AL2023_NVIDIA doesn't support <code>p3</code> and <code>g3</code> instance types.</p>\n                     </note>\n                  </dd>\n               </dl>\n            </dd>\n            <dt>EKS</dt>\n            <dd>\n               <p>If the <code>imageIdOverride</code> parameter isn't specified, then a recent <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon EKS-optimized Amazon Linux 2023\n       AMI</a> (<code>EKS_AL2023</code>) is used. If a new image type is specified in an update,\n      but neither an <code>imageId</code> nor a <code>imageIdOverride</code> parameter is specified,\n      then the latest Amazon EKS optimized AMI for that image type that Batch supports is used.</p>\n               <important>\n                  <p>Amazon Linux 2023 AMIs are the\n       default on Batch for Amazon EKS.</p>\n                  <p>Amazon Web Services ended support for Amazon EKS AL2-optimized and AL2-accelerated AMIs on November 26,\n       2025. Batch Amazon EKS compute environments using Amazon Linux 2 will no longer receive software\n       updates, security patches, or bug fixes from Amazon Web Services. We recommend migrating to Amazon Linux\n       2023. For more information on upgrading from AL2 to AL2023, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/eks-migration-2023.html\">How to upgrade from EKS AL2 to EKS AL2023</a> in the <i>Batch User Guide</i>.</p>\n               </important>\n               <dl>\n                  <dt>EKS_AL2</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon\n          Linux 2</a>: Used for non-GPU instance families.</p>\n                  </dd>\n                  <dt>EKS_AL2_NVIDIA</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon\n          Linux 2 (accelerated)</a>: Used for GPU instance families (for example,\n          <code>P4</code> and <code>G4</code>) and can be used for all non Amazon Web Services Graviton-based\n         instance types.</p>\n                  </dd>\n                  <dt>EKS_AL2023</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon\n         Linux 2023</a>: Default for non-GPU instance families.</p>\n                     <note>\n                        <p>Amazon Linux 2023 does not support <code>A1</code> instances.</p>\n                     </note>\n                  </dd>\n                  <dt>EKS_AL2023_NVIDIA</dt>\n                  <dd>\n                     <p>\n                        <a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon\n          Linux 2023 (accelerated)</a>: Default for GPU instance families and can be used for all non Amazon Web Services\n         Graviton-based instance types.</p>\n                  </dd>\n               </dl>\n            </dd>\n         </dl>",
             "smithy.api#required": {}
           }
         },
         "imageIdOverride": {
           "target": "com.amazonaws.batch#ImageIdOverride",
           "traits": {
-            "smithy.api#documentation": "<p>The AMI ID used for instances launched in the compute environment that match the image type.\n   This setting overrides the <code>imageId</code> set in the <code>computeResource</code>\n   object.</p>\n         <note>\n            <p>The AMI that you choose for a compute environment must match the architecture of the instance types that\n    you intend to use for that compute environment. For example, if your compute environment uses A1 instance types,\n    the compute resource AMI that you choose must support ARM instances. Amazon ECS vends both x86 and ARM versions of the\n    Amazon ECS-optimized Amazon Linux 2 AMI. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#ecs-optimized-ami-linux-variants.html\">Amazon ECS-optimized\n    Amazon Linux 2 AMI</a>\n    in the <i>Amazon Elastic Container Service Developer Guide</i>.</p>\n         </note>"
+            "smithy.api#documentation": "<p>The AMI ID used for instances launched in the compute environment that match the image type.\n   This setting overrides the <code>imageId</code> set in the <code>computeResource</code>\n   object.</p>\n         <note>\n            <p>The AMI that you choose for a compute environment must match the architecture of the instance types that\n    you intend to use for that compute environment. For example, if your compute environment uses A1 instance types,\n    the compute resource AMI that you choose must support ARM instances. Amazon ECS vends both x86 and ARM versions of the\n    Amazon ECS-optimized Amazon Linux 2023 AMI. For more information, see <a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#ecs-optimized-ami-linux-variants.html\">Amazon ECS-optimized\n    Amazon Linux 2023 AMI</a>\n    in the <i>Amazon Elastic Container Service Developer Guide</i>.</p>\n         </note>"
+          }
+        },
+        "batchImageStatus": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The status of the Batch-provided default AMIs associated with the <code>imageType</code>.</p>\n         <p>The field only appears after the compute environment has begun scaling instances using the <code>imageType</code>. The field is not present when an image is specified in\n            <code>ComputeResources.imageId</code> (deprecated), the default launch template, or\n            <code>Ec2Configuration.imageIdOverride</code>. The field is also not present when the compute environment has a launch template override.\n            \n            \n            For more information on image selection, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/ami-selection-order.html\">AMI selection order</a>.</p>\n         <note>\n            <p>This field is read-only and only appears in the <a href=\"https://docs.aws.amazon.com/batch/latest/APIReference/API_DescribeComputeEnvironments.html\">DescribeComputeEnvironments</a> response.</p>\n         </note>\n         <ul>\n            <li>\n               <p>\n                  <code>LATEST</code> \u2212 Using the most recent AMI supported</p>\n            </li>\n            <li>\n               <p>\n                  <code>UPDATE_AVAILABLE</code> \u2212 An updated AMI is available</p>\n               <ul>\n                  <li>\n                     <p>If a compute environment has multiple AMIs for the <code>imageType</code> and any one AMI has <code>UPDATE_AVAILABLE</code>, the status shows <code>UPDATE_AVAILABLE</code>.</p>\n                  </li>\n                  <li>\n                     <p>For compute environments that use <code>BEST_FIT</code> as their allocation strategy,\n                    you can perform a <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/blue-green-updates.html\">blue/green update</a> to update the AMI.</p>\n                  </li>\n                  <li>\n                     <p>For all other compute environments, you can perform an\n                    <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/managing-ami-versions.html#updating-ami-versions\">AMI version update</a> to update the AMI to the latest version.</p>\n                  </li>\n               </ul>\n            </li>\n         </ul>"
           }
         },
         "imageKubernetesVersion": {
@@ -4605,7 +5226,7 @@
         }
       },
       "traits": {
-        "smithy.api#documentation": "<p>Provides information used to select Amazon Machine Images (AMIs) for instances in the\n   compute environment. If <code>Ec2Configuration</code> isn't specified, the default is\n    <code>ECS_AL2</code> (<a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#al2ami\">Amazon Linux 2</a>).</p>\n         <note>\n            <p>This object isn't applicable to jobs that are running on Fargate resources.</p>\n         </note>"
+        "smithy.api#documentation": "<p>Provides information used to select Amazon Machine Images (AMIs) for instances in the\n   compute environment. If <code>Ec2Configuration</code> isn't specified, the default is\n    <code>ECS_AL2023</code> (<a href=\"https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html\">Amazon ECS-optimized Amazon Linux 2023</a>) for EC2 (ECS) compute environments and <code>EKS_AL2023</code> (<a href=\"https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html\">Amazon EKS-optimized Amazon Linux 2023\n    AMI</a>) for EKS compute environments.</p>\n         <note>\n            <p>This object isn't applicable to jobs that are running on Fargate resources.</p>\n         </note>"
       }
     },
     "com.amazonaws.batch#Ec2ConfigurationList": {
@@ -5732,6 +6353,58 @@
         "target": "com.amazonaws.batch#EvaluateOnExit"
       }
     },
+    "com.amazonaws.batch#FairshareCapacityUsage": {
+      "type": "structure",
+      "members": {
+        "capacityUnit": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The unit of measure for the capacity usage. For compute jobs, this is\n                <code>VCPU</code> for Amazon EC2 and <code>cpu</code> for Amazon EKS. For service jobs, this is the instance type.</p>"
+          }
+        },
+        "quantity": {
+          "target": "com.amazonaws.batch#Double",
+          "traits": {
+            "smithy.api#documentation": "<p>The quantity of capacity being used, measured in the units specified by\n                <code>capacityUnit</code>.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The capacity usage for a fairshare scheduling job queue.</p>"
+      }
+    },
+    "com.amazonaws.batch#FairshareCapacityUsageList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#FairshareCapacityUsage"
+      }
+    },
+    "com.amazonaws.batch#FairshareCapacityUtilization": {
+      "type": "structure",
+      "members": {
+        "shareIdentifier": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The share identifier for the fairshare scheduling job queue.</p>"
+          }
+        },
+        "capacityUsage": {
+          "target": "com.amazonaws.batch#FairshareCapacityUsageList",
+          "traits": {
+            "smithy.api#documentation": "<p>The capacity usage information for this share, including the unit of measure and\n            quantity being used. This is\n            <code>VCPU</code> for Amazon EC2 and <code>cpu</code> for Amazon EKS.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The capacity utilization for a specific share in a fairshare scheduling job queue, including the share identifier and its current usage.</p>"
+      }
+    },
+    "com.amazonaws.batch#FairshareCapacityUtilizationList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#FairshareCapacityUtilization"
+      }
+    },
     "com.amazonaws.batch#FairsharePolicy": {
       "type": "structure",
       "members": {
@@ -5756,6 +6429,26 @@
       },
       "traits": {
         "smithy.api#documentation": "<p>The fair-share scheduling policy details.</p>"
+      }
+    },
+    "com.amazonaws.batch#FairshareUtilizationDetail": {
+      "type": "structure",
+      "members": {
+        "activeShareCount": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The total number of active shares in the fairshare scheduling job queue that are\n            currently utilizing capacity.</p>"
+          }
+        },
+        "topCapacityUtilization": {
+          "target": "com.amazonaws.batch#FairshareCapacityUtilizationList",
+          "traits": {
+            "smithy.api#documentation": "<p>A list of the top 20 shares with the highest capacity utilization, ordered by usage\n            amount.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The fairshare utilization for a job queue, including the number\n            of active shares and top capacity utilization.</p>"
       }
     },
     "com.amazonaws.batch#FargatePlatformConfiguration": {
@@ -5869,6 +6562,61 @@
         "target": "com.amazonaws.batch#FrontOfQueueJobSummary"
       }
     },
+    "com.amazonaws.batch#FrontOfQuotaShareJobSummary": {
+      "type": "structure",
+      "members": {
+        "jobArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The ARN for a job in a named quota share.</p>"
+          }
+        },
+        "earliestTimeAtPosition": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the job transitioned to its current position in the quota share.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>An object that represents summary details for the first <code>RUNNABLE</code> job in a quota share.</p>"
+      }
+    },
+    "com.amazonaws.batch#FrontOfQuotaShareJobSummaryList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#FrontOfQuotaShareJobSummary"
+      }
+    },
+    "com.amazonaws.batch#FrontOfQuotaSharesDetail": {
+      "type": "structure",
+      "members": {
+        "quotaShares": {
+          "target": "com.amazonaws.batch#FrontOfQuotaSharesJobSummaryMap",
+          "traits": {
+            "smithy.api#documentation": "<p>Contains a list of the first <code>RUNNABLE</code> job in each named quota share.</p>"
+          }
+        },
+        "lastUpdatedAt": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the first <code>RUNNABLE</code> job per quota share were all last updated.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>An object that represents the details of the first <code>RUNNABLE</code> job in each named quota share associated with a single job queue.</p>"
+      }
+    },
+    "com.amazonaws.batch#FrontOfQuotaSharesJobSummaryMap": {
+      "type": "map",
+      "key": {
+        "target": "com.amazonaws.batch#String"
+      },
+      "value": {
+        "target": "com.amazonaws.batch#FrontOfQuotaShareJobSummaryList"
+      }
+    },
     "com.amazonaws.batch#GetJobQueueSnapshot": {
       "type": "operation",
       "input": {
@@ -5886,7 +6634,7 @@
         }
       ],
       "traits": {
-        "smithy.api#documentation": "<p>Provides a list of the first 100 <code>RUNNABLE</code> jobs associated to a single job queue.</p>",
+        "smithy.api#documentation": "<p>Provides a snapshot of job queue state, including ordering of <code>RUNNABLE</code> jobs, as well as capacity utilization for already dispatched jobs.\n    The first 100 <code>RUNNABLE</code> jobs in the job queue are listed in order of dispatch. For job queues with an attached\n    quota-share policy, the first <code>RUNNABLE</code> job in each quota share is also listed. Capacity utilization for the job queue is provided, as well as\n    break downs by share for job queues with attached fair-share or quota-share scheduling policies.</p>",
         "smithy.api#http": {
           "method": "POST",
           "uri": "/v1/getjobqueuesnapshot",
@@ -5916,7 +6664,19 @@
         "frontOfQueue": {
           "target": "com.amazonaws.batch#FrontOfQueueDetail",
           "traits": {
-            "smithy.api#documentation": "<p>The list of the first 100 <code>RUNNABLE</code> jobs in each job queue. For first-in-first-out (FIFO) job queues, jobs are ordered based on their submission time. For fair-share scheduling (FSS) job queues, jobs are ordered based on their job priority and share usage.</p>"
+            "smithy.api#documentation": "<p>The list of the first 100 <code>RUNNABLE</code> jobs in each job queue. For\n      first-in-first-out (FIFO) job queues, jobs are ordered based on their submission time. For job queues with an attached\n      fair-share scheduling (FSS) or quota-share policy, jobs are ordered based on their job priority and share\n      usage.</p>"
+          }
+        },
+        "frontOfQuotaShares": {
+          "target": "com.amazonaws.batch#FrontOfQuotaSharesDetail",
+          "traits": {
+            "smithy.api#documentation": "<p>The first <code>RUNNABLE</code> job in each quota share. Jobs are ordered based on their job priority and share usage.</p>"
+          }
+        },
+        "queueUtilization": {
+          "target": "com.amazonaws.batch#QueueSnapshotUtilizationDetail",
+          "traits": {
+            "smithy.api#documentation": "<p>The job queue's capacity utilization, including total usage and\n            breakdown per given share.</p>"
           }
         }
       },
@@ -6037,6 +6797,32 @@
             "smithy.api#enumValue": "INVALID"
           }
         }
+      }
+    },
+    "com.amazonaws.batch#JobCapacityUsageSummary": {
+      "type": "structure",
+      "members": {
+        "capacityUnit": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The unit of measure for the capacity usage. This is\n            <code>VCPU</code> for Amazon EC2 and <code>cpu</code> for Amazon EKS.</p>"
+          }
+        },
+        "quantity": {
+          "target": "com.amazonaws.batch#Double",
+          "traits": {
+            "smithy.api#documentation": "<p>The quantity of capacity being used by the job, measured in the units specified by\n                <code>capacityUnit</code>.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The capacity usage for a job, including the unit of measure\n            and quantity of resources being used.</p>"
+      }
+    },
+    "com.amazonaws.batch#JobCapacityUsageSummaryList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#JobCapacityUsageSummary"
       }
     },
     "com.amazonaws.batch#JobDefinition": {
@@ -6423,7 +7209,7 @@
       "traits": {
         "smithy.api#range": {
           "min": 1,
-          "max": 360
+          "max": 7200
         }
       }
     },
@@ -6583,7 +7369,7 @@
           "target": "com.amazonaws.batch#JobStateTimeLimitActionsAction",
           "traits": {
             "smithy.api#clientOptional": {},
-            "smithy.api#documentation": "<p>The action to take when a job is at the head of the job queue in the specified state for the specified period of\n   time. The only supported value is <code>CANCEL</code>, which will cancel the job.</p>",
+            "smithy.api#documentation": "<p>The action to take when a job is at the head of the job queue in the specified state for the specified period of\n   time. For job queues connected to a <code>ECS</code>, <code>FARGATE</code> or <code>EKS</code> compute environment, the only supported value is <code>CANCEL</code>, which will cancel the job. \n   For job queues connected to a <code>SAGEMAKER_TRAINING</code> service environment, the only supported value is <code>TERMINATE</code>, which will terminate the job.</p>",
             "smithy.api#required": {}
           }
         }
@@ -6698,10 +7484,28 @@
             "smithy.api#required": {}
           }
         },
+        "capacityUsage": {
+          "target": "com.amazonaws.batch#JobCapacityUsageSummaryList",
+          "traits": {
+            "smithy.api#documentation": "<p>The configured capacity usage information for this job, including the unit of measure and\n            quantity of resources.</p>"
+          }
+        },
         "createdAt": {
           "target": "com.amazonaws.batch#Long",
           "traits": {
             "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the job was created. For non-array jobs and\n   parent array jobs, this is when the job entered the <code>SUBMITTED</code> state (at the time\n    <a href=\"https://docs.aws.amazon.com/batch/latest/APIReference/API_SubmitJob.html\">SubmitJob</a>\n   was called). For array child jobs, this is when the child job was spawned by its parent and\n   entered the <code>PENDING</code> state.</p>"
+          }
+        },
+        "scheduledAt": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the job was scheduled for\n            execution. For more information on job statues, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/service-job-status.html\">Service job status</a> in the <i>Batch User Guide</i>.</p>"
+          }
+        },
+        "shareIdentifier": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The share identifier for the fairshare scheduling queue that this job is\n            associated with.</p>"
           }
         },
         "status": {
@@ -7120,7 +7924,7 @@
         }
       ],
       "traits": {
-        "smithy.api#documentation": "<p>Returns a list of Batch jobs.</p>\n         <p>You must specify only one of the following items:</p>\n         <ul>\n            <li>\n               <p>A job queue ID to return a list of jobs in that job queue</p>\n            </li>\n            <li>\n               <p>A multi-node parallel job ID to return a list of nodes for that job</p>\n            </li>\n            <li>\n               <p>An array job ID to return a list of the children for that job</p>\n            </li>\n         </ul>\n         <p>You can filter the results by job status with the <code>jobStatus</code> parameter. If you\n      don't specify a status, only <code>RUNNING</code> jobs are returned.</p>",
+        "smithy.api#documentation": "<p>Returns a list of Batch jobs.</p>\n         <p>You must specify only one of the following items:</p>\n         <ul>\n            <li>\n               <p>A job queue ID to return a list of jobs in that job queue</p>\n            </li>\n            <li>\n               <p>A multi-node parallel job ID to return a list of nodes for that job</p>\n            </li>\n            <li>\n               <p>An array job ID to return a list of the children for that job</p>\n            </li>\n         </ul>",
         "smithy.api#examples": [
           {
             "title": "To list running jobs",
@@ -7335,7 +8139,7 @@
         "shareIdentifier": {
           "target": "com.amazonaws.batch#String",
           "traits": {
-            "smithy.api#documentation": "<p>The fair-share scheduling policy identifier for the job.</p>"
+            "smithy.api#documentation": "<p>The fair-share scheduling identifier for the job.</p>"
           }
         },
         "jobStatus": {
@@ -7423,7 +8227,7 @@
         "jobStatus": {
           "target": "com.amazonaws.batch#JobStatus",
           "traits": {
-            "smithy.api#documentation": "<p>The job status used to filter jobs in the specified queue. If the <code>filters</code>\n      parameter is specified, the <code>jobStatus</code> parameter is ignored and jobs with any\n      status are returned. If you don't specify a status, only <code>RUNNING</code> jobs are\n      returned.</p>"
+            "smithy.api#documentation": "<p>The job status used to filter jobs in the specified queue. If the <code>filters</code>\n      parameter is specified, the <code>jobStatus</code> parameter is ignored and jobs with any\n      status are returned. The exception is the <code>SHARE_IDENTIFIER</code> filter and <code>jobStatus</code> can be used together. If you don't specify a status, only <code>RUNNING</code> jobs are\n      returned.</p>\n         <note>\n            <p>Array job parents are updated to <code>PENDING</code> when any child job is updated to <code>RUNNABLE</code> and remain in <code>PENDING</code> status while child jobs are running. To view these jobs, filter by <code>PENDING</code> status until all child jobs reach a terminal state.</p>\n         </note>"
           }
         },
         "maxResults": {
@@ -7441,7 +8245,7 @@
         "filters": {
           "target": "com.amazonaws.batch#ListJobsFilterList",
           "traits": {
-            "smithy.api#documentation": "<p>The filter to apply to the query. Only one filter can be used at a time. When the filter\n      is used, <code>jobStatus</code> is ignored. The filter doesn't apply to child jobs in an array\n      or multi-node parallel (MNP) jobs. The results are sorted by the <code>createdAt</code> field,\n      with the most recent jobs being first.</p>\n         <dl>\n            <dt>JOB_NAME</dt>\n            <dd>\n               <p>The value of the filter is a case-insensitive match for the job name. If the value\n            ends with an asterisk (*), the filter matches any job name that begins with the string\n            before the '*'. This corresponds to the <code>jobName</code> value. For example,\n              <code>test1</code> matches both <code>Test1</code> and <code>test1</code>, and\n              <code>test1*</code> matches both <code>test1</code> and <code>Test10</code>. When the\n              <code>JOB_NAME</code> filter is used, the results are grouped by the job name and\n            version.</p>\n            </dd>\n            <dt>JOB_DEFINITION</dt>\n            <dd>\n               <p>The value for the filter is the name or Amazon Resource Name (ARN) of the job definition. This\n            corresponds to the <code>jobDefinition</code> value. The value is case sensitive. When\n            the value for the filter is the job definition name, the results include all the jobs\n            that used any revision of that job definition name. If the value ends with an asterisk\n            (*), the filter matches any job definition name that begins with the string before the\n            '*'. For example, <code>jd1</code> matches only <code>jd1</code>, and <code>jd1*</code>\n            matches both <code>jd1</code> and <code>jd1A</code>. The version of the job definition\n            that's used doesn't affect the sort order. When the <code>JOB_DEFINITION</code> filter\n            is used and the ARN is used (which is in the form\n              <code>arn:${Partition}:batch:${Region}:${Account}:job-definition/${JobDefinitionName}:${Revision}</code>),\n            the results include jobs that used the specified revision of the job definition.\n            Asterisk (*) isn't supported when the ARN is used.</p>\n            </dd>\n            <dt>BEFORE_CREATED_AT</dt>\n            <dd>\n               <p>The value for the filter is the time that's before the job was created. This\n            corresponds to the <code>createdAt</code> value. The value is a string representation of\n            the number of milliseconds since 00:00:00 UTC (midnight) on January 1, 1970.</p>\n            </dd>\n            <dt>AFTER_CREATED_AT</dt>\n            <dd>\n               <p>The value for the filter is the time that's after the job was created. This\n            corresponds to the <code>createdAt</code> value. The value is a string representation of\n            the number of milliseconds since 00:00:00 UTC (midnight) on January 1, 1970.</p>\n            </dd>\n         </dl>"
+            "smithy.api#documentation": "<p>The filter to apply to the query. Only one filter can be used at a time. When the filter\n      is used, <code>jobStatus</code> is ignored with the exception that <code>SHARE_IDENTIFIER</code> and <code>jobStatus</code> can be used together. The filter doesn't apply to child jobs in an array\n      or multi-node parallel (MNP) jobs. The results are sorted by the <code>createdAt</code> field,\n      with the most recent jobs being first.</p>\n         <note>\n            <p>The <code>SHARE_IDENTIFIER</code> filter and the <code>jobStatus</code> field can be used together to filter results.</p>\n         </note>\n         <dl>\n            <dt>JOB_NAME</dt>\n            <dd>\n               <p>The value of the filter is a case-insensitive match for the job name. If the value\n            ends with an asterisk (*), the filter matches any job name that begins with the string\n            before the '*'. This corresponds to the <code>jobName</code> value. For example,\n              <code>test1</code> matches both <code>Test1</code> and <code>test1</code>, and\n              <code>test1*</code> matches both <code>test1</code> and <code>Test10</code>. When the\n              <code>JOB_NAME</code> filter is used, the results are grouped by the job name and\n            version.</p>\n            </dd>\n            <dt>JOB_DEFINITION</dt>\n            <dd>\n               <p>The value for the filter is the name or Amazon Resource Name (ARN) of the job definition. This\n            corresponds to the <code>jobDefinition</code> value. The value is case sensitive. When\n            the value for the filter is the job definition name, the results include all the jobs\n            that used any revision of that job definition name. If the value ends with an asterisk\n            (*), the filter matches any job definition name that begins with the string before the\n            '*'. For example, <code>jd1</code> matches only <code>jd1</code>, and <code>jd1*</code>\n            matches both <code>jd1</code> and <code>jd1A</code>. The version of the job definition\n            that's used doesn't affect the sort order. When the <code>JOB_DEFINITION</code> filter\n            is used and the ARN is used (which is in the form\n              <code>arn:${Partition}:batch:${Region}:${Account}:job-definition/${JobDefinitionName}:${Revision}</code>),\n            the results include jobs that used the specified revision of the job definition.\n            Asterisk (*) isn't supported when the ARN is used.</p>\n            </dd>\n            <dt>BEFORE_CREATED_AT</dt>\n            <dd>\n               <p>The value for the filter is the time that's before the job was created. This\n            corresponds to the <code>createdAt</code> value. The value is a string representation of\n            the number of milliseconds since 00:00:00 UTC (midnight) on January 1, 1970.</p>\n            </dd>\n            <dt>AFTER_CREATED_AT</dt>\n            <dd>\n               <p>The value for the filter is the time that's after the job was created. This\n            corresponds to the <code>createdAt</code> value. The value is a string representation of\n            the number of milliseconds since 00:00:00 UTC (midnight) on January 1, 1970.</p>\n            </dd>\n            <dt>SHARE_IDENTIFIER</dt>\n            <dd>\n               <p>The value for the filter is the fairshare scheduling share identifier.</p>\n            </dd>\n         </dl>"
           }
         }
       },
@@ -7465,6 +8269,85 @@
           "target": "com.amazonaws.batch#String",
           "traits": {
             "smithy.api#documentation": "<p>The <code>nextToken</code> value to include in a future <code>ListJobs</code> request.\n      When the results of a <code>ListJobs</code> request exceed <code>maxResults</code>, this value\n      can be used to retrieve the next page of results. This value is <code>null</code> when there\n      are no more results to return.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#output": {}
+      }
+    },
+    "com.amazonaws.batch#ListQuotaShares": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.batch#ListQuotaSharesRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.batch#ListQuotaSharesResponse"
+      },
+      "errors": [
+        {
+          "target": "com.amazonaws.batch#ClientException"
+        },
+        {
+          "target": "com.amazonaws.batch#ServerException"
+        }
+      ],
+      "traits": {
+        "smithy.api#documentation": "<p>Returns a list of Batch quota shares associated with a job queue.</p>",
+        "smithy.api#http": {
+          "method": "POST",
+          "uri": "/v1/listquotashares",
+          "code": 200
+        },
+        "smithy.api#paginated": {
+          "inputToken": "nextToken",
+          "outputToken": "nextToken",
+          "items": "quotaShares",
+          "pageSize": "maxResults"
+        }
+      }
+    },
+    "com.amazonaws.batch#ListQuotaSharesRequest": {
+      "type": "structure",
+      "members": {
+        "jobQueue": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The name or full Amazon Resource Name (ARN) of the job queue used to list quota shares.</p>",
+            "smithy.api#required": {}
+          }
+        },
+        "maxResults": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p>The maximum number of results returned by <code>ListQuotaShares</code> in\n      paginated output. When this parameter is used, <code>ListQuotaShares</code> only\n      returns <code>maxResults</code> results in a single page and a <code>nextToken</code> response\n      element. You can see the remaining results of the initial request by sending another\n        <code>ListQuotaShares</code> request with the returned <code>nextToken</code> value.\n      This value can be between 1 and 100. If this parameter isn't\n      used, <code>ListQuotaShares</code> returns up to 100 results and a\n        <code>nextToken</code> value if applicable.</p>"
+          }
+        },
+        "nextToken": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The <code>nextToken</code> value that's returned from a previous paginated\n        <code>ListQuotaShares</code> request where <code>maxResults</code> was used and the\n      results exceeded the value of that parameter. Pagination continues from the end of the\n      previous results that returned the <code>nextToken</code> value. This value is\n        <code>null</code> when there are no more results to return.</p>\n         <note>\n            <p>Treat this token as an opaque identifier that's only used to\n retrieve the next items in a list and not for other programmatic purposes.</p>\n         </note>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#input": {}
+      }
+    },
+    "com.amazonaws.batch#ListQuotaSharesResponse": {
+      "type": "structure",
+      "members": {
+        "quotaShares": {
+          "target": "com.amazonaws.batch#QuotaShareList",
+          "traits": {
+            "smithy.api#documentation": "<p>A list of quota shares that match the request.</p>"
+          }
+        },
+        "nextToken": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The <code>nextToken</code> value to include in a future\n        <code>ListQuotaShares</code> request. When the results of a\n        <code>ListQuotaShares</code> request exceed <code>maxResults</code>, this value can\n      be used to retrieve the next page of results. This value is <code>null</code> when there are\n      no more results to return.</p>"
           }
         }
       },
@@ -7587,7 +8470,7 @@
         "jobStatus": {
           "target": "com.amazonaws.batch#ServiceJobStatus",
           "traits": {
-            "smithy.api#documentation": "<p>The job status with which to filter service jobs. </p>"
+            "smithy.api#documentation": "<p>The job status used to filter service jobs in the specified queue. If the <code>filters</code>\n\t            parameter is specified, the <code>jobStatus</code> parameter is ignored and jobs with any\n\t            status are returned. The exceptions are the <code>SHARE_IDENTIFIER</code> filter and <code>QUOTA_SHARE_NAME</code> filter, which\n                can be used with <code>jobStatus</code>. If you don't specify a status, only <code>RUNNING</code> jobs are\n\t            returned.</p>\n         <note>\n            <p>The <code>SHARE_IDENTIFIER</code> filter or <code>QUOTA_SHARE_NAME</code> filter can be used with the <code>jobStatus</code> field to filter results.</p>\n         </note>"
           }
         },
         "maxResults": {
@@ -7605,7 +8488,7 @@
         "filters": {
           "target": "com.amazonaws.batch#ListJobsFilterList",
           "traits": {
-            "smithy.api#documentation": "<p>The filter to apply to the query. Only one filter can be used at a time. When the filter\n           is used, <code>jobStatus</code> is ignored. The results are sorted by the <code>createdAt</code> field,\n           with the most recent jobs being first.</p>\n         <dl>\n            <dt>JOB_NAME</dt>\n            <dd>\n               <p>The value of the filter is a case-insensitive match for the job name. If the value\n                       ends with an asterisk (*), the filter matches any job name that begins with the string\n                       before the '*'. This corresponds to the <code>jobName</code> value. For example,\n                       <code>test1</code> matches both <code>Test1</code> and <code>test1</code>, and\n                       <code>test1*</code> matches both <code>test1</code> and <code>Test10</code>. When the\n                       <code>JOB_NAME</code> filter is used, the results are grouped by the job name and\n                       version.</p>\n            </dd>\n            <dt>BEFORE_CREATED_AT</dt>\n            <dd>\n               <p>The value for the filter is the time that's before the job was created. This\n                       corresponds to the <code>createdAt</code> value. The value is a string representation of\n                       the number of milliseconds since 00:00:00 UTC (midnight) on January 1, 1970.</p>\n            </dd>\n            <dt>AFTER_CREATED_AT</dt>\n            <dd>\n               <p>The value for the filter is the time that's after the job was created. This\n                       corresponds to the <code>createdAt</code> value. The value is a string representation of\n                       the number of milliseconds since 00:00:00 UTC (midnight) on January 1, 1970.</p>\n            </dd>\n         </dl>"
+            "smithy.api#documentation": "<p>The filter to apply to the query. Only one filter can be used at a time. When the\n\t            filter is used, <code>jobStatus</code> is ignored with the exception that <code>SHARE_IDENTIFIER</code> or <code>QUOTA_SHARE_NAME</code> and <code>jobStatus</code> can be used together. The results are sorted by the\n\t                <code>createdAt</code> field, with the most recent jobs being first.</p>\n         <note>\n            <p>The <code>SHARE_IDENTIFIER</code> or <code>QUOTA_SHARE_NAME</code> filter and the <code>jobStatus</code> field can be used together to filter results.</p>\n         </note>\n         <dl>\n            <dt>JOB_NAME</dt>\n            <dd>\n               <p>The value of the filter is a case-insensitive match for the job name. If the value\n                       ends with an asterisk (*), the filter matches any job name that begins with the string\n                       before the '*'. This corresponds to the <code>jobName</code> value. For example,\n                       <code>test1</code> matches both <code>Test1</code> and <code>test1</code>, and\n                       <code>test1*</code> matches both <code>test1</code> and <code>Test10</code>. When the\n                       <code>JOB_NAME</code> filter is used, the results are grouped by the job name and\n                       version.</p>\n            </dd>\n            <dt>BEFORE_CREATED_AT</dt>\n            <dd>\n               <p>The value for the filter is the time that's before the job was created. This\n                       corresponds to the <code>createdAt</code> value. The value is a string representation of\n                       the number of milliseconds since 00:00:00 UTC (midnight) on January 1, 1970.</p>\n            </dd>\n            <dt>AFTER_CREATED_AT</dt>\n            <dd>\n               <p>The value for the filter is the time that's after the job was created. This\n                       corresponds to the <code>createdAt</code> value. The value is a string representation of\n                       the number of milliseconds since 00:00:00 UTC (midnight) on January 1, 1970.</p>\n            </dd>\n            <dt>SHARE_IDENTIFIER</dt>\n            <dd>\n               <p>The value for the filter is the fairshare scheduling share identifier.</p>\n            </dd>\n            <dt>QUOTA_SHARE_NAME</dt>\n            <dd>\n               <p>The value for the filter is the quota management share name.</p>\n            </dd>\n         </dl>"
           }
         }
       },
@@ -8162,6 +9045,379 @@
         }
       }
     },
+    "com.amazonaws.batch#QueueSnapshotCapacityUsage": {
+      "type": "structure",
+      "members": {
+        "capacityUnit": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The unit of measure for the capacity usage. For compute jobs, this is\n            <code>VCPU</code> for Amazon EC2 and <code>cpu</code> for Amazon EKS. For service jobs, this is the instance type.</p>"
+          }
+        },
+        "quantity": {
+          "target": "com.amazonaws.batch#Double",
+          "traits": {
+            "smithy.api#documentation": "<p>The quantity of capacity being used in the queue snapshot, measured in the units\n            specified by <code>capacityUnit</code>.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The configured capacity usage for a job queue snapshot, including the unit of\n            measure and quantity of resources being used.</p>"
+      }
+    },
+    "com.amazonaws.batch#QueueSnapshotCapacityUsageList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#QueueSnapshotCapacityUsage"
+      }
+    },
+    "com.amazonaws.batch#QueueSnapshotUtilizationDetail": {
+      "type": "structure",
+      "members": {
+        "totalCapacityUsage": {
+          "target": "com.amazonaws.batch#QueueSnapshotCapacityUsageList",
+          "traits": {
+            "smithy.api#documentation": "<p>The total capacity usage for the entire job queue.</p>"
+          }
+        },
+        "fairshareUtilization": {
+          "target": "com.amazonaws.batch#FairshareUtilizationDetail",
+          "traits": {
+            "smithy.api#documentation": "<p>The utilization information for a fairshare scheduling job queues, including\n            active share count and top capacity utilization by share.</p>"
+          }
+        },
+        "quotaShareUtilization": {
+          "target": "com.amazonaws.batch#QuotaShareUtilizationDetail",
+          "traits": {
+            "smithy.api#documentation": "<p>The utilization information for a job queue with a quota share scheduling policy.</p>"
+          }
+        },
+        "lastUpdatedAt": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the queue utilization information was\n            last updated.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The job queue utilization at a specific point in time,\n            including total capacity usage, and quota share or fairshare utilization breakdown\n            depending on the job queue scheduling policy.</p>"
+      }
+    },
+    "com.amazonaws.batch#QuotaShareCapacityLimit": {
+      "type": "structure",
+      "members": {
+        "maxCapacity": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The maximum capacity available for the quota share. This value represents the maximum quantity of a resource that can be allocated to jobs in the quota share\n       without borrowing.</p>",
+            "smithy.api#required": {}
+          }
+        },
+        "capacityUnit": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The unit of compute capacity for the capacityLimit. For example, <code>ml.m5.large</code>.</p>",
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>Defines the capacity limit for a quota share, or the type and maximum quantity of a particular resource that can be allocated to jobs in the quota share\n       without borrowing. </p>"
+      }
+    },
+    "com.amazonaws.batch#QuotaShareCapacityLimits": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#QuotaShareCapacityLimit"
+      }
+    },
+    "com.amazonaws.batch#QuotaShareCapacityUsage": {
+      "type": "structure",
+      "members": {
+        "capacityUnit": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The unit of compute capacity for the capacity usage.</p>"
+          }
+        },
+        "quantity": {
+          "target": "com.amazonaws.batch#Double",
+          "traits": {
+            "smithy.api#documentation": "<p>The quantity of capacity being used.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The capacity usage for a quota share, including units of compute capacity and quantity of resources being used.</p>"
+      }
+    },
+    "com.amazonaws.batch#QuotaShareCapacityUsageList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#QuotaShareCapacityUsage"
+      }
+    },
+    "com.amazonaws.batch#QuotaShareCapacityUtilization": {
+      "type": "structure",
+      "members": {
+        "quotaShareName": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The name of the quota share.</p>"
+          }
+        },
+        "capacityUsage": {
+          "target": "com.amazonaws.batch#QuotaShareCapacityUsageList",
+          "traits": {
+            "smithy.api#documentation": "<p>The capacity usage information for this quota share, including the units of compute capacity and quantity being used.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The capacity utilization for a specific quota share, including the quota share name and its current usage.</p>"
+      }
+    },
+    "com.amazonaws.batch#QuotaShareCapacityUtilizationList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#QuotaShareCapacityUtilization"
+      }
+    },
+    "com.amazonaws.batch#QuotaShareDetail": {
+      "type": "structure",
+      "members": {
+        "quotaShareName": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The name of the quota share.</p>"
+          }
+        },
+        "quotaShareArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the quota share.</p>"
+          }
+        },
+        "jobQueueArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the job queue associated with the quota share.</p>"
+          }
+        },
+        "capacityLimits": {
+          "target": "com.amazonaws.batch#QuotaShareCapacityLimits",
+          "traits": {
+            "smithy.api#documentation": "<p>A list that specifies the quantity and type of compute capacity allocated to the quota share.</p>"
+          }
+        },
+        "resourceSharingConfiguration": {
+          "target": "com.amazonaws.batch#QuotaShareResourceSharingConfiguration",
+          "traits": {
+            "smithy.api#documentation": "<p>Specifies whether a quota share reserves, lends, or both lends and borrows idle compute capacity.</p>"
+          }
+        },
+        "preemptionConfiguration": {
+          "target": "com.amazonaws.batch#QuotaSharePreemptionConfiguration",
+          "traits": {
+            "smithy.api#documentation": "<p>Specifies the preemption behavior for jobs in a quota share.</p>"
+          }
+        },
+        "state": {
+          "target": "com.amazonaws.batch#QuotaShareState",
+          "traits": {
+            "smithy.api#documentation": "<p>The state of the quota share.</p>"
+          }
+        },
+        "status": {
+          "target": "com.amazonaws.batch#QuotaShareStatus",
+          "traits": {
+            "smithy.api#documentation": "<p>The current status of the quota share.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>Detailed information about a quota share, including its configuration, state, and capacity limits.</p>"
+      }
+    },
+    "com.amazonaws.batch#QuotaShareIdleResourceAssignmentStrategy": {
+      "type": "enum",
+      "members": {
+        "FIFO": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "FIFO"
+          }
+        }
+      }
+    },
+    "com.amazonaws.batch#QuotaShareInSharePreemptionState": {
+      "type": "enum",
+      "members": {
+        "ENABLED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "ENABLED"
+          }
+        },
+        "DISABLED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "DISABLED"
+          }
+        }
+      }
+    },
+    "com.amazonaws.batch#QuotaShareList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#QuotaShareDetail"
+      }
+    },
+    "com.amazonaws.batch#QuotaSharePolicy": {
+      "type": "structure",
+      "members": {
+        "idleResourceAssignmentStrategy": {
+          "target": "com.amazonaws.batch#QuotaShareIdleResourceAssignmentStrategy",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The strategy that determines how idle resources are assigned to quota shares\n       that are borrowing capacity. Currently, only <code>FIFO</code> is supported.</p>",
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The quota share scheduling policy details for a job queue.</p>"
+      }
+    },
+    "com.amazonaws.batch#QuotaSharePreemptionConfiguration": {
+      "type": "structure",
+      "members": {
+        "inSharePreemption": {
+          "target": "com.amazonaws.batch#QuotaShareInSharePreemptionState",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>Specifies whether jobs within a quota share can be preempted by another, higher priority job in the same quota share.</p>",
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>Specifies the preemption behavior for jobs in a quota share.</p>"
+      }
+    },
+    "com.amazonaws.batch#QuotaShareResourceSharingConfiguration": {
+      "type": "structure",
+      "members": {
+        "strategy": {
+          "target": "com.amazonaws.batch#QuotaShareResourceSharingStrategy",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The resource sharing strategy for the quota share. The <code>RESERVE</code> strategy allows a quota share to reserve idle capacity for itself.\n      <code>LEND</code> configures the share to lend its idle capacity to another share in need of capacity.\n      The <code>LEND_AND_BORROW</code> strategy configures the share to borrow idle capacity from an underutilized share, as well as lend to another share.</p>",
+            "smithy.api#required": {}
+          }
+        },
+        "borrowLimit": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p>The maximum percentage of additional capacity that the quota share can borrow from other shares. <code>borrowLimit</code> can only be applied to quota shares with a strategy of <code>LEND_AND_BORROW</code>.\n        This value is expressed as a percentage of the quota share's configured <a href=\"https://docs.aws.amazon.com/batch/latest/APIReference/API_QuotaShareCapacityLimit.html\">CapacityLimits</a>.</p>\n         <p>The <code>borrowLimit</code> is applied uniformly across all capacity units. \n        For example, if the <code>borrowLimit</code> is 200, the quota \n        share can borrow up to 200% of its configured <code>maxCapacity</code> for each capacity unit. The default <code>borrowLimit</code> is -1, which indicates unlimited borrowing.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>Specifies whether a quota share reserves, lends, or both lends and borrows idle compute capacity.</p>"
+      }
+    },
+    "com.amazonaws.batch#QuotaShareResourceSharingStrategy": {
+      "type": "enum",
+      "members": {
+        "RESERVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "RESERVE"
+          }
+        },
+        "LEND": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "LEND"
+          }
+        },
+        "LEND_AND_BORROW": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "LEND_AND_BORROW"
+          }
+        }
+      }
+    },
+    "com.amazonaws.batch#QuotaShareState": {
+      "type": "enum",
+      "members": {
+        "ENABLED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "ENABLED"
+          }
+        },
+        "DISABLED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "DISABLED"
+          }
+        }
+      }
+    },
+    "com.amazonaws.batch#QuotaShareStatus": {
+      "type": "enum",
+      "members": {
+        "CREATING": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "CREATING"
+          }
+        },
+        "VALID": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "VALID"
+          }
+        },
+        "INVALID": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "INVALID"
+          }
+        },
+        "UPDATING": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "UPDATING"
+          }
+        },
+        "DELETING": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "DELETING"
+          }
+        }
+      }
+    },
+    "com.amazonaws.batch#QuotaShareUtilizationDetail": {
+      "type": "structure",
+      "members": {
+        "topCapacityUtilization": {
+          "target": "com.amazonaws.batch#QuotaShareCapacityUtilizationList",
+          "traits": {
+            "smithy.api#documentation": "<p>A list of the top capacity utilizations across quota shares associated with a job queue.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>An object that represents the capacity utilization details of all quota shares associated with a single job queue.</p>"
+      }
+    },
     "com.amazonaws.batch#RegisterJobDefinition": {
       "type": "operation",
       "input": {
@@ -8508,6 +9764,40 @@
         "smithy.api#documentation": "<p> An object that represents the compute environment architecture for Batch jobs on\n   Fargate. </p>"
       }
     },
+    "com.amazonaws.batch#S3FilesVolumeConfiguration": {
+      "type": "structure",
+      "members": {
+        "fileSystemArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the S3Files file system to use.</p>",
+            "smithy.api#required": {}
+          }
+        },
+        "rootDirectory": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The directory within the S3Files file system to mount as the root directory.</p>"
+          }
+        },
+        "transitEncryptionPort": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p>The port to use when sending encrypted data between the Amazon ECS host and the S3Files file system\n   server.</p>"
+          }
+        },
+        "accessPointArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the S3Files access point to use.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>This is used when you're using an S3Files file system for job storage.</p>"
+      }
+    },
     "com.amazonaws.batch#SchedulingPolicyDetail": {
       "type": "structure",
       "members": {
@@ -8525,6 +9815,12 @@
             "smithy.api#clientOptional": {},
             "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the scheduling policy. An example is\n     <code>arn:<i>aws</i>:batch:<i>us-east-1</i>:<i>123456789012</i>:scheduling-policy/<i>HighPriority</i>\n            </code>.</p>",
             "smithy.api#required": {}
+          }
+        },
+        "quotaSharePolicy": {
+          "target": "com.amazonaws.batch#QuotaSharePolicy",
+          "traits": {
+            "smithy.api#documentation": "<p>The quota share scheduling policy details.</p>"
           }
         },
         "fairsharePolicy": {
@@ -8816,6 +10112,58 @@
         "target": "com.amazonaws.batch#ServiceJobAttemptDetail"
       }
     },
+    "com.amazonaws.batch#ServiceJobCapacityUsageDetail": {
+      "type": "structure",
+      "members": {
+        "capacityUnit": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The unit of measure for the service job capacity usage. For service jobs, this is the\n                instance type.</p>"
+          }
+        },
+        "quantity": {
+          "target": "com.amazonaws.batch#Double",
+          "traits": {
+            "smithy.api#documentation": "<p>The quantity of capacity being used by the service job, measured in the units\n            specified by <code>capacityUnit</code>.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The capacity usage for a service job, including the unit of\n            measure and quantity of resources being consumed.</p>"
+      }
+    },
+    "com.amazonaws.batch#ServiceJobCapacityUsageDetailList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#ServiceJobCapacityUsageDetail"
+      }
+    },
+    "com.amazonaws.batch#ServiceJobCapacityUsageSummary": {
+      "type": "structure",
+      "members": {
+        "capacityUnit": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The unit of measure for the service job capacity usage. For service jobs, this is the\n                instance type.</p>"
+          }
+        },
+        "quantity": {
+          "target": "com.amazonaws.batch#Double",
+          "traits": {
+            "smithy.api#documentation": "<p>The quantity of capacity being used by the service job, measured in the units\n            specified by <code>capacityUnit</code>.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>The capacity usage for a service job, including the unit of\n            measure and quantity of resources being used.</p>"
+      }
+    },
+    "com.amazonaws.batch#ServiceJobCapacityUsageSummaryList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#ServiceJobCapacityUsageSummary"
+      }
+    },
     "com.amazonaws.batch#ServiceJobEvaluateOnExit": {
       "type": "structure",
       "members": {
@@ -8840,6 +10188,78 @@
       "type": "list",
       "member": {
         "target": "com.amazonaws.batch#ServiceJobEvaluateOnExit"
+      }
+    },
+    "com.amazonaws.batch#ServiceJobPreemptedAttempt": {
+      "type": "structure",
+      "members": {
+        "serviceResourceId": {
+          "target": "com.amazonaws.batch#ServiceResourceId",
+          "traits": {
+            "smithy.api#documentation": "<p>The service resource identifier associated with the service job attempt.</p>"
+          }
+        },
+        "startedAt": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the service job attempt was started.</p>"
+          }
+        },
+        "stoppedAt": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the service job attempt stopped running.</p>"
+          }
+        },
+        "statusReason": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>A string that provides additional details for the current status of the service job attempt.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>Detailed information about a preempted attempt of a service job.</p>"
+      }
+    },
+    "com.amazonaws.batch#ServiceJobPreemptionConfiguration": {
+      "type": "structure",
+      "members": {
+        "preemptionRetriesBeforeTermination": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p>The number of times a service job can be retried after it is preempted.  A job will be terminated when preemption retries have been exhausted.\n      If this field is unset, preempted jobs will be requeued an unlimited number of times. </p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>Specifies the service job behavior when preempted.</p>"
+      }
+    },
+    "com.amazonaws.batch#ServiceJobPreemptionSummary": {
+      "type": "structure",
+      "members": {
+        "preemptedAttemptCount": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p>The total number of times the service job has been preempted.</p>"
+          }
+        },
+        "recentPreemptedAttempts": {
+          "target": "com.amazonaws.batch#ServiceJobRecentPreemptedAttemptList",
+          "traits": {
+            "smithy.api#documentation": "<p>A list of the most recent preemption attempts for the service job.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>Summarizes the preemptions of the service job. This field appears on a service job\n        when it has been preempted.</p>"
+      }
+    },
+    "com.amazonaws.batch#ServiceJobRecentPreemptedAttemptList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.batch#ServiceJobPreemptedAttempt"
       }
     },
     "com.amazonaws.batch#ServiceJobRetryAction": {
@@ -8943,6 +10363,12 @@
             "smithy.api#documentation": "<p>Information about the latest attempt for the service job.</p>"
           }
         },
+        "capacityUsage": {
+          "target": "com.amazonaws.batch#ServiceJobCapacityUsageSummaryList",
+          "traits": {
+            "smithy.api#documentation": "<p>The capacity usage information for this service job, including the unit of measure and\n            quantity of resources being used.</p>"
+          }
+        },
         "createdAt": {
           "target": "com.amazonaws.batch#Long",
           "traits": {
@@ -8971,6 +10397,12 @@
             "smithy.api#required": {}
           }
         },
+        "scheduledAt": {
+          "target": "com.amazonaws.batch#Long",
+          "traits": {
+            "smithy.api#documentation": "<p>The Unix timestamp (in milliseconds) for when the service job was scheduled for\n            execution.</p>"
+          }
+        },
         "serviceJobType": {
           "target": "com.amazonaws.batch#ServiceJobType",
           "traits": {
@@ -8983,6 +10415,12 @@
           "target": "com.amazonaws.batch#String",
           "traits": {
             "smithy.api#documentation": "<p>The share identifier for the job.</p>"
+          }
+        },
+        "quotaShareName": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The quota share for the service job.</p>"
           }
         },
         "status": {
@@ -9382,6 +10820,18 @@
             "smithy.api#documentation": "<p>The share identifier for the service job. Don't specify this parameter if the job\n            queue doesn't have a fair-share scheduling policy. If the job queue has a fair-share\n            scheduling policy, then this parameter must be specified.</p>"
           }
         },
+        "quotaShareName": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The quota share for the service job. Don't specify this parameter if the job queue\n        doesn't have a quota share scheduling policy. If the job queue has a quota share scheduling policy,\n        then this parameter must be specified.</p>"
+          }
+        },
+        "preemptionConfiguration": {
+          "target": "com.amazonaws.batch#ServiceJobPreemptionConfiguration",
+          "traits": {
+            "smithy.api#documentation": "<p>Specifies the service job behavior when preempted.</p>"
+          }
+        },
         "timeoutConfig": {
           "target": "com.amazonaws.batch#ServiceJobTimeout",
           "traits": {
@@ -9691,6 +11141,18 @@
             "smithy.api#documentation": "<p>The user to use inside the container. This parameter maps to User in the Create a container\n   section of the Docker Remote API and the --user option to docker run.</p>\n         <note>\n            <p>When running tasks using the <code>host</code> network mode, don't run containers using the\n     <code>root user (UID 0)</code>. We recommend using a non-root user for better security.</p>\n         </note>\n         <p>You can specify the <code>user</code> using the following formats. If specifying a UID or\n   GID, you must specify it as a positive integer.</p>\n         <ul>\n            <li>\n               <p>\n                  <code>user</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code>user:group</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code>uid</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code>uid:gid</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code>user:gi</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code>uid:group</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code></code>\n               </p>\n            </li>\n         </ul>\n         <note>\n            <p>This parameter is not supported for Windows containers.</p>\n         </note>"
           }
         },
+        "startTimeout": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p>Time duration (in seconds) to wait before giving up on resolving dependencies for a\n   container. The minimum value is 2 seconds and the maximum value for Fargate is 120\n   seconds.</p>"
+          }
+        },
+        "stopTimeout": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p>Time duration (in seconds) to wait before the container is forcefully killed if it doesn't\n   exit normally on its own. The minimum value is 2 seconds and the maximum value for Fargate is\n   120 seconds. If the parameter is not specified, the default value of 30 seconds is used. For\n   tasks that use the EC2 launch type, if the <code>stopTimeout</code> parameter isn't specified,\n   the value set for the Amazon ECS container agent configuration variable\n    <code>ECS_CONTAINER_STOP_TIMEOUT</code> is used. If neither the <code>stopTimeout</code>\n   parameter nor the <code>ECS_CONTAINER_STOP_TIMEOUT</code> agent configuration variable are set,\n   then the default value of 30 seconds is used.</p>"
+          }
+        },
         "exitCode": {
           "target": "com.amazonaws.batch#Integer",
           "traits": {
@@ -9857,6 +11319,18 @@
           "target": "com.amazonaws.batch#String",
           "traits": {
             "smithy.api#documentation": "<p>The user to use inside the container. This parameter maps to User in the Create a container\n   section of the Docker Remote API and the --user option to docker run.</p>\n         <note>\n            <p>When running tasks using the <code>host</code> network mode, don't run containers using the\n     <code>root user (UID 0)</code>. We recommend using a non-root user for better security.</p>\n         </note>\n         <p>You can specify the <code>user</code> using the following formats. If specifying a UID or\n   GID, you must specify it as a positive integer.</p>\n         <ul>\n            <li>\n               <p>\n                  <code>user</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code>user:group</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code>uid</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code>uid:gid</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code>user:gi</code>\n               </p>\n            </li>\n            <li>\n               <p>\n                  <code>uid:group</code>\n               </p>\n            </li>\n         </ul>\n         <note>\n            <p>This parameter is not supported for Windows containers.</p>\n         </note>"
+          }
+        },
+        "startTimeout": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p>Time duration (in seconds) to wait before giving up on resolving dependencies for a\n   container. The minimum value is 2 seconds and the maximum value for Fargate is 120\n   seconds.</p>"
+          }
+        },
+        "stopTimeout": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p>Time duration (in seconds) to wait before the container is forcefully killed if it doesn't\n   exit normally on its own. The minimum value is 2 seconds and the maximum value for Fargate is\n   120 seconds. If the parameter is not specified, the default value of 30 seconds is used. For\n   tasks that use the EC2 launch type, if the <code>stopTimeout</code> parameter isn't specified,\n   the value set for the Amazon ECS container agent configuration variable\n    <code>ECS_CONTAINER_STOP_TIMEOUT</code> is used. If neither the <code>stopTimeout</code>\n   parameter nor the <code>ECS_CONTAINER_STOP_TIMEOUT</code> agent configuration variable are set,\n   then the default value of 30 seconds is used.</p>"
           }
         }
       },
@@ -10200,7 +11674,7 @@
         "state": {
           "target": "com.amazonaws.batch#CEState",
           "traits": {
-            "smithy.api#documentation": "<p>The state of the compute environment. Compute environments in the <code>ENABLED</code>\n      state can accept jobs from a queue and scale in or out automatically based on the workload\n      demand of its associated queues.</p>\n         <p>If the state is <code>ENABLED</code>, then the Batch scheduler can attempt to place jobs\n      from an associated job queue on the compute resources within the environment. If the compute\n      environment is managed, then it can scale its instances out or in automatically, based on the\n      job queue demand.</p>\n         <p>If the state is <code>DISABLED</code>, then the Batch scheduler doesn't attempt to place\n      jobs within the environment. Jobs in a <code>STARTING</code> or <code>RUNNING</code> state\n      continue to progress normally. Managed compute environments in the <code>DISABLED</code> state\n      don't scale out. </p>\n         <note>\n            <p>Compute environments in a <code>DISABLED</code> state may continue to incur billing\n        charges. To prevent additional charges, turn off and then delete the compute environment.\n        For more information, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/compute_environment_parameters.html#compute_environment_state\">State</a> in the <i>Batch User Guide</i>.</p>\n         </note>\n         <p>When an instance is idle, the instance scales down to the <code>minvCpus</code> value.\n      However, the instance size doesn't change. For example, consider a <code>c5.8xlarge</code>\n      instance with a <code>minvCpus</code> value of <code>4</code> and a <code>desiredvCpus</code>\n      value of <code>36</code>. This instance doesn't scale down to a <code>c5.large</code>\n      instance.</p>"
+            "smithy.api#documentation": "<p>The state of the compute environment. Compute environments in the <code>ENABLED</code>\n      state can accept jobs from a queue and scale in or out automatically based on the workload\n      demand of its associated queues.</p>\n         <p>If the state is <code>ENABLED</code>, then the Batch scheduler can attempt to place jobs\n      from an associated job queue on the compute resources within the environment. If the compute\n      environment is managed, then it can scale its instances out or in automatically, based on the\n      job queue demand.</p>\n         <p>If the state is <code>DISABLED</code>, then the Batch scheduler doesn't attempt to place\n      jobs within the environment. Jobs in a <code>STARTING</code> or <code>RUNNING</code> state\n      continue to progress normally. Managed compute environments in the <code>DISABLED</code> state\n      don't scale out. </p>\n         <note>\n            <p>Compute environments in a <code>DISABLED</code> state may continue to incur billing\n        charges, for example, if they have running instances due to jobs that are still executing or a non-zero <code>minvCpus</code> setting. To prevent additional charges, disable and delete the compute environment.</p>\n         </note>\n         <p>When an instance is idle, the instance scales down to the <code>minvCpus</code> value.\n      However, the instance size doesn't change. For example, consider a <code>c5.8xlarge</code>\n      instance with a <code>minvCpus</code> value of <code>4</code> and a <code>desiredvCpus</code>\n      value of <code>36</code>. This instance doesn't scale down to a <code>c5.large</code>\n      instance.</p>"
           }
         },
         "unmanagedvCpus": {
@@ -10489,12 +11963,97 @@
         "jobExecutionTimeoutMinutes": {
           "target": "com.amazonaws.batch#JobExecutionTimeoutMinutes",
           "traits": {
-            "smithy.api#documentation": "<p>Specifies the job timeout (in minutes) when the compute environment infrastructure is\n   updated. The default value is 30.</p>"
+            "smithy.api#documentation": "<p>Specifies the job timeout (in minutes) when the compute environment infrastructure is\n   updated. The default value is 30. The maximum value is 7200.</p>\n         <note>\n            <p>Increasing <code>jobExecutionTimeoutMinutes</code> during infrastructure updates delays \n    the replacement of instances with new instances that include updates such as security patches, \n    but provides more time for jobs to execute. Consider the security implications of this tradeoff \n    when setting timeout values.</p>\n         </note>"
           }
         }
       },
       "traits": {
         "smithy.api#documentation": "<p>Specifies the infrastructure update policy for the Amazon EC2 compute environment. For more information\n   about infrastructure updates, see <a href=\"https://docs.aws.amazon.com/batch/latest/userguide/updating-compute-environments.html\">Updating compute environments</a> in the\n    <i>Batch User Guide</i>.</p>"
+      }
+    },
+    "com.amazonaws.batch#UpdateQuotaShare": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.batch#UpdateQuotaShareRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.batch#UpdateQuotaShareResponse"
+      },
+      "errors": [
+        {
+          "target": "com.amazonaws.batch#ClientException"
+        },
+        {
+          "target": "com.amazonaws.batch#ServerException"
+        }
+      ],
+      "traits": {
+        "smithy.api#documentation": "<p>Updates a quota share.</p>",
+        "smithy.api#http": {
+          "method": "POST",
+          "uri": "/v1/updatequotashare",
+          "code": 200
+        }
+      }
+    },
+    "com.amazonaws.batch#UpdateQuotaShareRequest": {
+      "type": "structure",
+      "members": {
+        "quotaShareArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the quota share to update.</p>",
+            "smithy.api#required": {}
+          }
+        },
+        "capacityLimits": {
+          "target": "com.amazonaws.batch#QuotaShareCapacityLimits",
+          "traits": {
+            "smithy.api#documentation": "<p>A list that specifies the quantity and type of compute capacity allocated to the quota share.</p>"
+          }
+        },
+        "resourceSharingConfiguration": {
+          "target": "com.amazonaws.batch#QuotaShareResourceSharingConfiguration",
+          "traits": {
+            "smithy.api#documentation": "<p>Specifies whether a quota share reserves, lends, or both lends and borrows idle compute capacity.</p>"
+          }
+        },
+        "preemptionConfiguration": {
+          "target": "com.amazonaws.batch#QuotaSharePreemptionConfiguration",
+          "traits": {
+            "smithy.api#documentation": "<p>Specifies the preemption behavior for jobs in a quota share.</p>"
+          }
+        },
+        "state": {
+          "target": "com.amazonaws.batch#QuotaShareState",
+          "traits": {
+            "smithy.api#documentation": "<p>The state of the quota share. If the quota share is <code>ENABLED</code>, it is able to accept jobs.\n    If the quota share is <code>DISABLED</code>, new jobs won't be accepted but jobs already submitted can finish.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#input": {}
+      }
+    },
+    "com.amazonaws.batch#UpdateQuotaShareResponse": {
+      "type": "structure",
+      "members": {
+        "quotaShareName": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The name of the quota share.</p>"
+          }
+        },
+        "quotaShareArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the quota share.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#output": {}
       }
     },
     "com.amazonaws.batch#UpdateSchedulingPolicy": {
@@ -10533,15 +12092,21 @@
             "smithy.api#required": {}
           }
         },
+        "quotaSharePolicy": {
+          "target": "com.amazonaws.batch#QuotaSharePolicy",
+          "traits": {
+            "smithy.api#documentation": "<p>The quota share scheduling policy details. Once set during creation, a quotaSharePolicy cannot be removed or changed to a fairsharePolicy.</p>"
+          }
+        },
         "fairsharePolicy": {
           "target": "com.amazonaws.batch#FairsharePolicy",
           "traits": {
-            "smithy.api#documentation": "<p>The fair-share policy scheduling details.</p>"
+            "smithy.api#documentation": "<p>The fair-share policy scheduling details. Once set during creation, a fairsharePolicy cannot be removed or changed to a quotaSharePolicy.</p>"
           }
         }
       },
       "traits": {
-        "smithy.api#documentation": "<p>Contains the parameters for <code>UpdateSchedulingPolicy</code>.</p>",
+        "smithy.api#documentation": "<p>Contains the parameters for <code>UpdateSchedulingPolicy</code>. </p>",
         "smithy.api#input": {}
       }
     },
@@ -10629,6 +12194,81 @@
         "smithy.api#output": {}
       }
     },
+    "com.amazonaws.batch#UpdateServiceJob": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.batch#UpdateServiceJobRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.batch#UpdateServiceJobResponse"
+      },
+      "errors": [
+        {
+          "target": "com.amazonaws.batch#ClientException"
+        },
+        {
+          "target": "com.amazonaws.batch#ServerException"
+        }
+      ],
+      "traits": {
+        "smithy.api#documentation": "<p>Updates the priority of a specified service job in an Batch job queue.</p>",
+        "smithy.api#http": {
+          "method": "POST",
+          "uri": "/v1/updateservicejob",
+          "code": 200
+        }
+      }
+    },
+    "com.amazonaws.batch#UpdateServiceJobRequest": {
+      "type": "structure",
+      "members": {
+        "jobId": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The Batch job ID of the job to update.</p>",
+            "smithy.api#required": {}
+          }
+        },
+        "schedulingPriority": {
+          "target": "com.amazonaws.batch#Integer",
+          "traits": {
+            "smithy.api#clientOptional": {},
+            "smithy.api#documentation": "<p>The scheduling priority for the job. This only affects jobs in job queues with a\n      quota-share or fair-share scheduling policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower\n      scheduling priority within a share.</p>\n         <p>The minimum supported value is 0 and the maximum supported value is 9999.</p>",
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#input": {}
+      }
+    },
+    "com.amazonaws.batch#UpdateServiceJobResponse": {
+      "type": "structure",
+      "members": {
+        "jobArn": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) for the job.</p>"
+          }
+        },
+        "jobName": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The name of the job.</p>"
+          }
+        },
+        "jobId": {
+          "target": "com.amazonaws.batch#String",
+          "traits": {
+            "smithy.api#documentation": "<p>The unique identifier for the job.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#output": {}
+      }
+    },
     "com.amazonaws.batch#UserdataType": {
       "type": "enum",
       "members": {
@@ -10665,6 +12305,12 @@
           "target": "com.amazonaws.batch#EFSVolumeConfiguration",
           "traits": {
             "smithy.api#documentation": "<p>This parameter is specified when you're using an Amazon Elastic File System file system for job storage. Jobs\n   that are running on Fargate resources must specify a <code>platformVersion</code> of at least\n    <code>1.4.0</code>.</p>"
+          }
+        },
+        "s3filesVolumeConfiguration": {
+          "target": "com.amazonaws.batch#S3FilesVolumeConfiguration",
+          "traits": {
+            "smithy.api#documentation": "<p>This parameter is specified when you're using an S3Files file system for job storage.</p>"
           }
         }
       },

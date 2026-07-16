@@ -11,7 +11,7 @@ jobs:
         if: github.repository == 'aws/api-models-aws' || github.repository == 'kellertk/api-models-aws'
         steps:
             - name: Auto Close Pull Request
-              uses: actions/github-script@v7
+              uses: actions/github-script@v9
               with:
                   script: |
                       const body = context.payload.pull_request.body;

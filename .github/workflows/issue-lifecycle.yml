@@ -11,7 +11,7 @@ jobs:
         runs-on: ubuntu-latest
         name: Issue Cleanup
         steps:
-            - uses: aws-actions/stale-issue-cleanup@v7.1.0
+            - uses: aws-actions/stale-issue-cleanup@v7.1.1
               with:
                 repo-token: ${{ secrets.GITHUB_TOKEN }}
                 issue-types: "issues,pull-requests"

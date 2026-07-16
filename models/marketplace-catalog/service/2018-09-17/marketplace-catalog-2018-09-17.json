@@ -97,15 +97,9 @@
         "aws.protocols#restJson1": {},
         "smithy.api#documentation": "<p>Catalog API actions allow you to manage your entities through list, describe, and\n            update capabilities. An <i>entity</i> can be a product or an offer on AWS Marketplace. </p>\n         <p>You can automate your entity update process by integrating the AWS Marketplace Catalog\n            API with your AWS Marketplace product build or deployment pipelines. You can also create\n            your own applications on top of the Catalog API to manage your products on AWS\n            Marketplace.</p>",
         "smithy.api#title": "AWS Marketplace Catalog Service",
-        "smithy.rules#endpointRuleSet": {
-          "version": "1.0",
+        "smithy.rules#endpointBdd": {
+          "version": "1.1",
           "parameters": {
-            "Region": {
-              "builtIn": "AWS::Region",
-              "required": false,
-              "documentation": "The AWS region used to dispatch the request.",
-              "type": "string"
-            },
             "UseDualStack": {
               "builtIn": "AWS::UseDualStack",
               "required": true,
@@ -124,6 +118,218 @@
               "builtIn": "SDK::Endpoint",
               "required": false,
               "documentation": "Override the endpoint used to send this request",
+              "type": "string"
+            },
+            "Region": {
+              "builtIn": "AWS::Region",
+              "required": false,
+              "documentation": "The AWS region used to dispatch the request.",
+              "type": "string"
+            }
+          },
+          "conditions": [
+            {
+              "fn": "isSet",
+              "argv": [
+                {
+                  "ref": "Endpoint"
+                }
+              ]
+            },
+            {
+              "fn": "isSet",
+              "argv": [
+                {
+                  "ref": "Region"
+                }
+              ]
+            },
+            {
+              "fn": "aws.partition",
+              "argv": [
+                {
+                  "ref": "Region"
+                }
+              ],
+              "assign": "PartitionResult"
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "ref": "UseFIPS"
+                },
+                true
+              ]
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "fn": "getAttr",
+                  "argv": [
+                    {
+                      "ref": "PartitionResult"
+                    },
+                    "supportsFIPS"
+                  ]
+                },
+                true
+              ]
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "ref": "UseDualStack"
+                },
+                true
+              ]
+            },
+            {
+              "fn": "stringEquals",
+              "argv": [
+                {
+                  "ref": "Region"
+                },
+                "us-east-1"
+              ]
+            },
+            {
+              "fn": "booleanEquals",
+              "argv": [
+                {
+                  "fn": "getAttr",
+                  "argv": [
+                    {
+                      "ref": "PartitionResult"
+                    },
+                    "supportsDualStack"
+                  ]
+                },
+                true
+              ]
+            }
+          ],
+          "results": [
+            {
+              "conditions": [],
+              "error": "Invalid Configuration: FIPS and custom endpoint are not supported",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "error": "Invalid Configuration: Dualstack and custom endpoint are not supported",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": {
+                  "ref": "Endpoint"
+                },
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://catalog-marketplace.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://catalog.marketplace-fips.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "FIPS and DualStack are enabled, but this partition does not support one or both",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://catalog.marketplace-fips.{Region}.{PartitionResult#dnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "FIPS is enabled but this partition does not support FIPS",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://catalog.marketplace.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "DualStack is enabled but this partition does not support DualStack",
+              "type": "error"
+            },
+            {
+              "conditions": [],
+              "endpoint": {
+                "url": "https://catalog.marketplace.{Region}.{PartitionResult#dnsSuffix}",
+                "properties": {},
+                "headers": {}
+              },
+              "type": "endpoint"
+            },
+            {
+              "conditions": [],
+              "error": "Invalid Configuration: Missing Region",
+              "type": "error"
+            }
+          ],
+          "root": 2,
+          "nodeCount": 14,
+          "nodes": "/////wAAAAH/////AAAAAAAAAA0AAAADAAAAAQAAAAQF9eEMAAAAAgAAAAUF9eEMAAAAAwAAAAkAAAAGAAAABQAAAAcF9eELAAAABgX14QQAAAAIAAAABwX14QkF9eEKAAAABAAAAAsAAAAKAAAABQX14QYF9eEIAAAABQAAAAwF9eEHAAAABwX14QUF9eEGAAAAAwX14QEAAAAOAAAABQX14QIF9eED"
+        },
+        "smithy.rules#endpointRuleSet": {
+          "version": "1.0",
+          "parameters": {
+            "UseDualStack": {
+              "builtIn": "AWS::UseDualStack",
+              "required": true,
+              "default": false,
+              "documentation": "When true, use the dual-stack endpoint. If the configured endpoint does not support dual-stack, dispatching the request MAY return an error.",
+              "type": "boolean"
+            },
+            "UseFIPS": {
+              "builtIn": "AWS::UseFIPS",
+              "required": true,
+              "default": false,
+              "documentation": "When true, send this request to the FIPS-compliant regional endpoint. If the configured endpoint does not have a FIPS compliant endpoint, dispatching the request will return an error.",
+              "type": "boolean"
+            },
+            "Endpoint": {
+              "builtIn": "SDK::Endpoint",
+              "required": false,
+              "documentation": "Override the endpoint used to send this request",
+              "type": "string"
+            },
+            "Region": {
+              "builtIn": "AWS::Region",
+              "required": false,
+              "documentation": "The AWS region used to dispatch the request.",
               "type": "string"
             }
           },
@@ -156,58 +362,7 @@
                   "type": "error"
                 },
                 {
-                  "conditions": [
-                    {
-                      "fn": "booleanEquals",
-                      "argv": [
-                        {
-                          "ref": "UseDualStack"
-                        },
-                        true
-                      ]
-                    }
-                  ],
-                  "error": "Invalid Configuration: Dualstack and custom endpoint are not supported",
-                  "type": "error"
-                },
-                {
                   "conditions": [],
-                  "endpoint": {
-                    "url": {
-                      "ref": "Endpoint"
-                    },
-                    "properties": {},
-                    "headers": {}
-                  },
-                  "type": "endpoint"
-                }
-              ],
-              "type": "tree"
-            },
-            {
-              "conditions": [
-                {
-                  "fn": "isSet",
-                  "argv": [
-                    {
-                      "ref": "Region"
-                    }
-                  ]
-                }
-              ],
-              "rules": [
-                {
-                  "conditions": [
-                    {
-                      "fn": "aws.partition",
-                      "argv": [
-                        {
-                          "ref": "Region"
-                        }
-                      ],
-                      "assign": "PartitionResult"
-                    }
-                  ],
                   "rules": [
                     {
                       "conditions": [
@@ -215,184 +370,21 @@
                           "fn": "booleanEquals",
                           "argv": [
                             {
-                              "ref": "UseFIPS"
-                            },
-                            true
-                          ]
-                        },
-                        {
-                          "fn": "booleanEquals",
-                          "argv": [
-                            {
                               "ref": "UseDualStack"
                             },
                             true
                           ]
                         }
                       ],
-                      "rules": [
-                        {
-                          "conditions": [
-                            {
-                              "fn": "booleanEquals",
-                              "argv": [
-                                true,
-                                {
-                                  "fn": "getAttr",
-                                  "argv": [
-                                    {
-                                      "ref": "PartitionResult"
-                                    },
-                                    "supportsFIPS"
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "fn": "booleanEquals",
-                              "argv": [
-                                true,
-                                {
-                                  "fn": "getAttr",
-                                  "argv": [
-                                    {
-                                      "ref": "PartitionResult"
-                                    },
-                                    "supportsDualStack"
-                                  ]
-                                }
-                              ]
-                            }
-                          ],
-                          "rules": [
-                            {
-                              "conditions": [],
-                              "endpoint": {
-                                "url": "https://catalog.marketplace-fips.{Region}.{PartitionResult#dualStackDnsSuffix}",
-                                "properties": {},
-                                "headers": {}
-                              },
-                              "type": "endpoint"
-                            }
-                          ],
-                          "type": "tree"
-                        },
-                        {
-                          "conditions": [],
-                          "error": "FIPS and DualStack are enabled, but this partition does not support one or both",
-                          "type": "error"
-                        }
-                      ],
-                      "type": "tree"
-                    },
-                    {
-                      "conditions": [
-                        {
-                          "fn": "booleanEquals",
-                          "argv": [
-                            {
-                              "ref": "UseFIPS"
-                            },
-                            true
-                          ]
-                        }
-                      ],
-                      "rules": [
-                        {
-                          "conditions": [
-                            {
-                              "fn": "booleanEquals",
-                              "argv": [
-                                {
-                                  "fn": "getAttr",
-                                  "argv": [
-                                    {
-                                      "ref": "PartitionResult"
-                                    },
-                                    "supportsFIPS"
-                                  ]
-                                },
-                                true
-                              ]
-                            }
-                          ],
-                          "rules": [
-                            {
-                              "conditions": [],
-                              "endpoint": {
-                                "url": "https://catalog.marketplace-fips.{Region}.{PartitionResult#dnsSuffix}",
-                                "properties": {},
-                                "headers": {}
-                              },
-                              "type": "endpoint"
-                            }
-                          ],
-                          "type": "tree"
-                        },
-                        {
-                          "conditions": [],
-                          "error": "FIPS is enabled but this partition does not support FIPS",
-                          "type": "error"
-                        }
-                      ],
-                      "type": "tree"
-                    },
-                    {
-                      "conditions": [
-                        {
-                          "fn": "booleanEquals",
-                          "argv": [
-                            {
-                              "ref": "UseDualStack"
-                            },
-                            true
-                          ]
-                        }
-                      ],
-                      "rules": [
-                        {
-                          "conditions": [
-                            {
-                              "fn": "booleanEquals",
-                              "argv": [
-                                true,
-                                {
-                                  "fn": "getAttr",
-                                  "argv": [
-                                    {
-                                      "ref": "PartitionResult"
-                                    },
-                                    "supportsDualStack"
-                                  ]
-                                }
-                              ]
-                            }
-                          ],
-                          "rules": [
-                            {
-                              "conditions": [],
-                              "endpoint": {
-                                "url": "https://catalog.marketplace.{Region}.{PartitionResult#dualStackDnsSuffix}",
-                                "properties": {},
-                                "headers": {}
-                              },
-                              "type": "endpoint"
-                            }
-                          ],
-                          "type": "tree"
-                        },
-                        {
-                          "conditions": [],
-                          "error": "DualStack is enabled but this partition does not support DualStack",
-                          "type": "error"
-                        }
-                      ],
-                      "type": "tree"
+                      "error": "Invalid Configuration: Dualstack and custom endpoint are not supported",
+                      "type": "error"
                     },
                     {
                       "conditions": [],
                       "endpoint": {
-                        "url": "https://catalog.marketplace.{Region}.{PartitionResult#dnsSuffix}",
+                        "url": {
+                          "ref": "Endpoint"
+                        },
                         "properties": {},
                         "headers": {}
                       },
@@ -406,24 +398,338 @@
             },
             {
               "conditions": [],
-              "error": "Invalid Configuration: Missing Region",
-              "type": "error"
+              "rules": [
+                {
+                  "conditions": [
+                    {
+                      "fn": "isSet",
+                      "argv": [
+                        {
+                          "ref": "Region"
+                        }
+                      ]
+                    }
+                  ],
+                  "rules": [
+                    {
+                      "conditions": [
+                        {
+                          "fn": "aws.partition",
+                          "argv": [
+                            {
+                              "ref": "Region"
+                            }
+                          ],
+                          "assign": "PartitionResult"
+                        }
+                      ],
+                      "rules": [
+                        {
+                          "conditions": [
+                            {
+                              "fn": "stringEquals",
+                              "argv": [
+                                {
+                                  "ref": "Region"
+                                },
+                                "us-east-1"
+                              ]
+                            },
+                            {
+                              "fn": "booleanEquals",
+                              "argv": [
+                                {
+                                  "ref": "UseFIPS"
+                                },
+                                false
+                              ]
+                            },
+                            {
+                              "fn": "booleanEquals",
+                              "argv": [
+                                {
+                                  "ref": "UseDualStack"
+                                },
+                                true
+                              ]
+                            }
+                          ],
+                          "endpoint": {
+                            "url": "https://catalog-marketplace.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                            "properties": {},
+                            "headers": {}
+                          },
+                          "type": "endpoint"
+                        },
+                        {
+                          "conditions": [
+                            {
+                              "fn": "booleanEquals",
+                              "argv": [
+                                {
+                                  "ref": "UseFIPS"
+                                },
+                                true
+                              ]
+                            },
+                            {
+                              "fn": "booleanEquals",
+                              "argv": [
+                                {
+                                  "ref": "UseDualStack"
+                                },
+                                true
+                              ]
+                            }
+                          ],
+                          "rules": [
+                            {
+                              "conditions": [
+                                {
+                                  "fn": "booleanEquals",
+                                  "argv": [
+                                    true,
+                                    {
+                                      "fn": "getAttr",
+                                      "argv": [
+                                        {
+                                          "ref": "PartitionResult"
+                                        },
+                                        "supportsFIPS"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "fn": "booleanEquals",
+                                  "argv": [
+                                    true,
+                                    {
+                                      "fn": "getAttr",
+                                      "argv": [
+                                        {
+                                          "ref": "PartitionResult"
+                                        },
+                                        "supportsDualStack"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ],
+                              "rules": [
+                                {
+                                  "conditions": [],
+                                  "endpoint": {
+                                    "url": "https://catalog.marketplace-fips.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                                    "properties": {},
+                                    "headers": {}
+                                  },
+                                  "type": "endpoint"
+                                }
+                              ],
+                              "type": "tree"
+                            },
+                            {
+                              "conditions": [],
+                              "error": "FIPS and DualStack are enabled, but this partition does not support one or both",
+                              "type": "error"
+                            }
+                          ],
+                          "type": "tree"
+                        },
+                        {
+                          "conditions": [
+                            {
+                              "fn": "booleanEquals",
+                              "argv": [
+                                {
+                                  "ref": "UseFIPS"
+                                },
+                                true
+                              ]
+                            },
+                            {
+                              "fn": "booleanEquals",
+                              "argv": [
+                                {
+                                  "ref": "UseDualStack"
+                                },
+                                false
+                              ]
+                            }
+                          ],
+                          "rules": [
+                            {
+                              "conditions": [
+                                {
+                                  "fn": "booleanEquals",
+                                  "argv": [
+                                    {
+                                      "fn": "getAttr",
+                                      "argv": [
+                                        {
+                                          "ref": "PartitionResult"
+                                        },
+                                        "supportsFIPS"
+                                      ]
+                                    },
+                                    true
+                                  ]
+                                }
+                              ],
+                              "rules": [
+                                {
+                                  "conditions": [],
+                                  "endpoint": {
+                                    "url": "https://catalog.marketplace-fips.{Region}.{PartitionResult#dnsSuffix}",
+                                    "properties": {},
+                                    "headers": {}
+                                  },
+                                  "type": "endpoint"
+                                }
+                              ],
+                              "type": "tree"
+                            },
+                            {
+                              "conditions": [],
+                              "error": "FIPS is enabled but this partition does not support FIPS",
+                              "type": "error"
+                            }
+                          ],
+                          "type": "tree"
+                        },
+                        {
+                          "conditions": [
+                            {
+                              "fn": "booleanEquals",
+                              "argv": [
+                                {
+                                  "ref": "UseFIPS"
+                                },
+                                false
+                              ]
+                            },
+                            {
+                              "fn": "booleanEquals",
+                              "argv": [
+                                {
+                                  "ref": "UseDualStack"
+                                },
+                                true
+                              ]
+                            }
+                          ],
+                          "rules": [
+                            {
+                              "conditions": [
+                                {
+                                  "fn": "booleanEquals",
+                                  "argv": [
+                                    true,
+                                    {
+                                      "fn": "getAttr",
+                                      "argv": [
+                                        {
+                                          "ref": "PartitionResult"
+                                        },
+                                        "supportsDualStack"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ],
+                              "rules": [
+                                {
+                                  "conditions": [],
+                                  "endpoint": {
+                                    "url": "https://catalog.marketplace.{Region}.{PartitionResult#dualStackDnsSuffix}",
+                                    "properties": {},
+                                    "headers": {}
+                                  },
+                                  "type": "endpoint"
+                                }
+                              ],
+                              "type": "tree"
+                            },
+                            {
+                              "conditions": [],
+                              "error": "DualStack is enabled but this partition does not support DualStack",
+                              "type": "error"
+                            }
+                          ],
+                          "type": "tree"
+                        },
+                        {
+                          "conditions": [],
+                          "endpoint": {
+                            "url": "https://catalog.marketplace.{Region}.{PartitionResult#dnsSuffix}",
+                            "properties": {},
+                            "headers": {}
+                          },
+                          "type": "endpoint"
+                        }
+                      ],
+                      "type": "tree"
+                    }
+                  ],
+                  "type": "tree"
+                },
+                {
+                  "conditions": [],
+                  "error": "Invalid Configuration: Missing Region",
+                  "type": "error"
+                }
+              ],
+              "type": "tree"
             }
           ]
         },
         "smithy.rules#endpointTests": {
           "testCases": [
             {
-              "documentation": "For region us-east-1 with FIPS disabled and DualStack disabled",
+              "documentation": "For custom endpoint with region not set and fips disabled",
               "expect": {
                 "endpoint": {
-                  "url": "https://catalog.marketplace.us-east-1.amazonaws.com"
+                  "url": "https://example.com"
+                }
+              },
+              "params": {
+                "Endpoint": "https://example.com",
+                "UseFIPS": false
+              }
+            },
+            {
+              "documentation": "For custom endpoint with fips enabled",
+              "expect": {
+                "error": "Invalid Configuration: FIPS and custom endpoint are not supported"
+              },
+              "params": {
+                "Endpoint": "https://example.com",
+                "UseFIPS": true
+              }
+            },
+            {
+              "documentation": "For custom endpoint with fips disabled and dualstack enabled",
+              "expect": {
+                "error": "Invalid Configuration: Dualstack and custom endpoint are not supported"
+              },
+              "params": {
+                "Endpoint": "https://example.com",
+                "UseFIPS": false,
+                "UseDualStack": true
+              }
+            },
+            {
+              "documentation": "For region us-east-1 with FIPS disabled and DualStack enabled",
+              "expect": {
+                "endpoint": {
+                  "url": "https://catalog-marketplace.us-east-1.api.aws"
                 }
               },
               "params": {
                 "Region": "us-east-1",
                 "UseFIPS": false,
-                "UseDualStack": false
+                "UseDualStack": true
               }
             },
             {
@@ -453,118 +759,92 @@
               }
             },
             {
-              "documentation": "For region us-east-1 with FIPS disabled and DualStack enabled",
+              "documentation": "For region us-east-1 with FIPS disabled and DualStack disabled",
               "expect": {
                 "endpoint": {
-                  "url": "https://catalog.marketplace.us-east-1.api.aws"
+                  "url": "https://catalog.marketplace.us-east-1.amazonaws.com"
                 }
               },
               "params": {
                 "Region": "us-east-1",
                 "UseFIPS": false,
-                "UseDualStack": true
+                "UseDualStack": false
               }
             },
             {
-              "documentation": "For region cn-north-1 with FIPS enabled and DualStack enabled",
+              "documentation": "For region cn-northwest-1 with FIPS enabled and DualStack enabled",
               "expect": {
                 "endpoint": {
-                  "url": "https://catalog.marketplace-fips.cn-north-1.api.amazonwebservices.com.cn"
+                  "url": "https://catalog.marketplace-fips.cn-northwest-1.api.amazonwebservices.com.cn"
                 }
               },
               "params": {
-                "Region": "cn-north-1",
+                "Region": "cn-northwest-1",
                 "UseFIPS": true,
                 "UseDualStack": true
               }
             },
             {
-              "documentation": "For region cn-north-1 with FIPS enabled and DualStack disabled",
+              "documentation": "For region cn-northwest-1 with FIPS enabled and DualStack disabled",
               "expect": {
                 "endpoint": {
-                  "url": "https://catalog.marketplace-fips.cn-north-1.amazonaws.com.cn"
+                  "url": "https://catalog.marketplace-fips.cn-northwest-1.amazonaws.com.cn"
                 }
               },
               "params": {
-                "Region": "cn-north-1",
+                "Region": "cn-northwest-1",
                 "UseFIPS": true,
                 "UseDualStack": false
               }
             },
             {
-              "documentation": "For region cn-north-1 with FIPS disabled and DualStack enabled",
+              "documentation": "For region cn-northwest-1 with FIPS disabled and DualStack enabled",
               "expect": {
                 "endpoint": {
-                  "url": "https://catalog.marketplace.cn-north-1.api.amazonwebservices.com.cn"
+                  "url": "https://catalog.marketplace.cn-northwest-1.api.amazonwebservices.com.cn"
                 }
               },
               "params": {
-                "Region": "cn-north-1",
+                "Region": "cn-northwest-1",
                 "UseFIPS": false,
                 "UseDualStack": true
               }
             },
             {
-              "documentation": "For region cn-north-1 with FIPS disabled and DualStack disabled",
+              "documentation": "For region cn-northwest-1 with FIPS disabled and DualStack disabled",
               "expect": {
                 "endpoint": {
-                  "url": "https://catalog.marketplace.cn-north-1.amazonaws.com.cn"
+                  "url": "https://catalog.marketplace.cn-northwest-1.amazonaws.com.cn"
                 }
               },
               "params": {
-                "Region": "cn-north-1",
+                "Region": "cn-northwest-1",
                 "UseFIPS": false,
                 "UseDualStack": false
               }
             },
             {
-              "documentation": "For region us-gov-east-1 with FIPS enabled and DualStack enabled",
+              "documentation": "For region eusc-de-east-1 with FIPS enabled and DualStack disabled",
               "expect": {
                 "endpoint": {
-                  "url": "https://catalog.marketplace-fips.us-gov-east-1.api.aws"
+                  "url": "https://catalog.marketplace-fips.eusc-de-east-1.amazonaws.eu"
                 }
               },
               "params": {
-                "Region": "us-gov-east-1",
-                "UseFIPS": true,
-                "UseDualStack": true
-              }
-            },
-            {
-              "documentation": "For region us-gov-east-1 with FIPS enabled and DualStack disabled",
-              "expect": {
-                "endpoint": {
-                  "url": "https://catalog.marketplace-fips.us-gov-east-1.amazonaws.com"
-                }
-              },
-              "params": {
-                "Region": "us-gov-east-1",
+                "Region": "eusc-de-east-1",
                 "UseFIPS": true,
                 "UseDualStack": false
               }
             },
             {
-              "documentation": "For region us-gov-east-1 with FIPS disabled and DualStack enabled",
+              "documentation": "For region eusc-de-east-1 with FIPS disabled and DualStack disabled",
               "expect": {
                 "endpoint": {
-                  "url": "https://catalog.marketplace.us-gov-east-1.api.aws"
+                  "url": "https://catalog.marketplace.eusc-de-east-1.amazonaws.eu"
                 }
               },
               "params": {
-                "Region": "us-gov-east-1",
-                "UseFIPS": false,
-                "UseDualStack": true
-              }
-            },
-            {
-              "documentation": "For region us-gov-east-1 with FIPS disabled and DualStack disabled",
-              "expect": {
-                "endpoint": {
-                  "url": "https://catalog.marketplace.us-gov-east-1.amazonaws.com"
-                }
-              },
-              "params": {
-                "Region": "us-gov-east-1",
+                "Region": "eusc-de-east-1",
                 "UseFIPS": false,
                 "UseDualStack": false
               }
@@ -622,54 +902,107 @@
               }
             },
             {
-              "documentation": "For custom endpoint with region set and fips disabled and dualstack disabled",
+              "documentation": "For region eu-isoe-west-1 with FIPS enabled and DualStack disabled",
               "expect": {
                 "endpoint": {
-                  "url": "https://example.com"
+                  "url": "https://catalog.marketplace-fips.eu-isoe-west-1.cloud.adc-e.uk"
                 }
               },
               "params": {
-                "Region": "us-east-1",
-                "UseFIPS": false,
-                "UseDualStack": false,
-                "Endpoint": "https://example.com"
-              }
-            },
-            {
-              "documentation": "For custom endpoint with region not set and fips disabled and dualstack disabled",
-              "expect": {
-                "endpoint": {
-                  "url": "https://example.com"
-                }
-              },
-              "params": {
-                "UseFIPS": false,
-                "UseDualStack": false,
-                "Endpoint": "https://example.com"
-              }
-            },
-            {
-              "documentation": "For custom endpoint with fips enabled and dualstack disabled",
-              "expect": {
-                "error": "Invalid Configuration: FIPS and custom endpoint are not supported"
-              },
-              "params": {
-                "Region": "us-east-1",
+                "Region": "eu-isoe-west-1",
                 "UseFIPS": true,
-                "UseDualStack": false,
-                "Endpoint": "https://example.com"
+                "UseDualStack": false
               }
             },
             {
-              "documentation": "For custom endpoint with fips disabled and dualstack enabled",
+              "documentation": "For region eu-isoe-west-1 with FIPS disabled and DualStack disabled",
               "expect": {
-                "error": "Invalid Configuration: Dualstack and custom endpoint are not supported"
+                "endpoint": {
+                  "url": "https://catalog.marketplace.eu-isoe-west-1.cloud.adc-e.uk"
+                }
               },
               "params": {
-                "Region": "us-east-1",
+                "Region": "eu-isoe-west-1",
                 "UseFIPS": false,
-                "UseDualStack": true,
-                "Endpoint": "https://example.com"
+                "UseDualStack": false
+              }
+            },
+            {
+              "documentation": "For region us-isof-south-1 with FIPS enabled and DualStack disabled",
+              "expect": {
+                "endpoint": {
+                  "url": "https://catalog.marketplace-fips.us-isof-south-1.csp.hci.ic.gov"
+                }
+              },
+              "params": {
+                "Region": "us-isof-south-1",
+                "UseFIPS": true,
+                "UseDualStack": false
+              }
+            },
+            {
+              "documentation": "For region us-isof-south-1 with FIPS disabled and DualStack disabled",
+              "expect": {
+                "endpoint": {
+                  "url": "https://catalog.marketplace.us-isof-south-1.csp.hci.ic.gov"
+                }
+              },
+              "params": {
+                "Region": "us-isof-south-1",
+                "UseFIPS": false,
+                "UseDualStack": false
+              }
+            },
+            {
+              "documentation": "For region us-gov-west-1 with FIPS enabled and DualStack enabled",
+              "expect": {
+                "endpoint": {
+                  "url": "https://catalog.marketplace-fips.us-gov-west-1.api.aws"
+                }
+              },
+              "params": {
+                "Region": "us-gov-west-1",
+                "UseFIPS": true,
+                "UseDualStack": true
+              }
+            },
+            {
+              "documentation": "For region us-gov-west-1 with FIPS enabled and DualStack disabled",
+              "expect": {
+                "endpoint": {
+                  "url": "https://catalog.marketplace-fips.us-gov-west-1.amazonaws.com"
+                }
+              },
+              "params": {
+                "Region": "us-gov-west-1",
+                "UseFIPS": true,
+                "UseDualStack": false
+              }
+            },
+            {
+              "documentation": "For region us-gov-west-1 with FIPS disabled and DualStack enabled",
+              "expect": {
+                "endpoint": {
+                  "url": "https://catalog.marketplace.us-gov-west-1.api.aws"
+                }
+              },
+              "params": {
+                "Region": "us-gov-west-1",
+                "UseFIPS": false,
+                "UseDualStack": true
+              }
+            },
+            {
+              "documentation": "For region us-gov-west-1 with FIPS disabled and DualStack disabled",
+              "expect": {
+                "endpoint": {
+                  "url": "https://catalog.marketplace.us-gov-west-1.amazonaws.com"
+                }
+              },
+              "params": {
+                "Region": "us-gov-west-1",
+                "UseFIPS": false,
+                "UseDualStack": false
               }
             },
             {
@@ -4809,6 +5142,12 @@
           "traits": {
             "smithy.api#documentation": "<p>Allows filtering on the <code>LastModifiedDate</code> of a ResaleAuthorization.</p>"
           }
+        },
+        "ResellerRole": {
+          "target": "com.amazonaws.marketplacecatalog#ResaleAuthorizationResellerRoleFilter",
+          "traits": {
+            "smithy.api#documentation": "<p>Allows filtering on the <code>ResellerRole</code> of a ResaleAuthorization.</p>"
+          }
         }
       },
       "traits": {
@@ -5249,6 +5588,49 @@
         "smithy.api#pattern": "^(.)+$"
       }
     },
+    "com.amazonaws.marketplacecatalog#ResaleAuthorizationResellerRoleFilter": {
+      "type": "structure",
+      "members": {
+        "ValueList": {
+          "target": "com.amazonaws.marketplacecatalog#ResaleAuthorizationResellerRoleFilterValueList",
+          "traits": {
+            "smithy.api#documentation": "<p>Allows filtering on the <code>ResellerRole</code> of a ResaleAuthorization with list input.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>Allows filtering on the <code>ResellerRole</code> of a ResaleAuthorization.</p>"
+      }
+    },
+    "com.amazonaws.marketplacecatalog#ResaleAuthorizationResellerRoleFilterValueList": {
+      "type": "list",
+      "member": {
+        "target": "com.amazonaws.marketplacecatalog#ResaleAuthorizationResellerRoleString"
+      },
+      "traits": {
+        "smithy.api#length": {
+          "min": 1,
+          "max": 10
+        }
+      }
+    },
+    "com.amazonaws.marketplacecatalog#ResaleAuthorizationResellerRoleString": {
+      "type": "enum",
+      "members": {
+        "ChannelPartner": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "ChannelPartner"
+          }
+        },
+        "Distributor": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Distributor"
+          }
+        }
+      }
+    },
     "com.amazonaws.marketplacecatalog#ResaleAuthorizationSort": {
       "type": "structure",
       "members": {
@@ -5468,6 +5850,12 @@
           "target": "com.amazonaws.marketplacecatalog#DateTimeISO8601",
           "traits": {
             "smithy.api#documentation": "<p>The availability end date of the ResaleAuthorization.</p>"
+          }
+        },
+        "ResellerRole": {
+          "target": "com.amazonaws.marketplacecatalog#ResaleAuthorizationResellerRoleString",
+          "traits": {
+            "smithy.api#documentation": "<p>The reseller role of the ResaleAuthorization.</p>"
           }
         }
       },
