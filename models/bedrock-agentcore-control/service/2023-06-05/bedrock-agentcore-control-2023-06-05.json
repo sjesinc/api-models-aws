@@ -203,6 +203,41 @@
         "smithy.api#output": {}
       }
     },
+    "com.amazonaws.bedrockagentcorecontrol#AdditionalClaimName": {
+      "type": "string",
+      "traits": {
+        "smithy.api#length": {
+          "min": 1,
+          "max": 255
+        },
+        "smithy.api#pattern": "^[A-Za-z0-9_.:#-]+$"
+      }
+    },
+    "com.amazonaws.bedrockagentcorecontrol#AdditionalClaimValue": {
+      "type": "string",
+      "traits": {
+        "smithy.api#length": {
+          "min": 1,
+          "max": 2048
+        },
+        "smithy.api#sensitive": {}
+      }
+    },
+    "com.amazonaws.bedrockagentcorecontrol#AdditionalClaims": {
+      "type": "map",
+      "key": {
+        "target": "com.amazonaws.bedrockagentcorecontrol#AdditionalClaimName"
+      },
+      "value": {
+        "target": "com.amazonaws.bedrockagentcorecontrol#AdditionalClaimValue"
+      },
+      "traits": {
+        "smithy.api#length": {
+          "min": 1,
+          "max": 10
+        }
+      }
+    },
     "com.amazonaws.bedrockagentcorecontrol#AdditionalModelRequestFields": {
       "type": "document"
     },
@@ -2816,6 +2851,12 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "AWS_IAM_ID_TOKEN_JWT"
+          }
+        },
+        "PRIVATE_KEY_JWT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "PRIVATE_KEY_JWT"
           }
         }
       }
@@ -8413,6 +8454,9 @@
             "smithy.api#documentation": "<p>The client authentication method to use when authenticating with the token endpoint.</p>"
           }
         },
+        "privateKeyJwtConfig": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#PrivateKeyJwtConfig"
+        },
         "privateEndpoint": {
           "target": "com.amazonaws.bedrockagentcorecontrol#PrivateEndpoint",
           "traits": {
@@ -8446,6 +8490,18 @@
             "smithy.api#documentation": "<p>The client ID for the custom OAuth2 provider.</p>"
           }
         },
+        "onBehalfOfTokenExchangeConfig": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#OnBehalfOfTokenExchangeConfigType",
+          "traits": {
+            "smithy.api#documentation": "<p>The configuration for on-behalf-of token exchange.</p>"
+          }
+        },
+        "clientAuthenticationMethod": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#ClientAuthenticationMethodType",
+          "traits": {
+            "smithy.api#documentation": "<p>The client authentication method used when authenticating with the token endpoint.</p>"
+          }
+        },
         "privateEndpoint": {
           "target": "com.amazonaws.bedrockagentcorecontrol#PrivateEndpoint",
           "traits": {
@@ -8458,17 +8514,8 @@
             "smithy.api#documentation": "<p>The private endpoint overrides for the custom OAuth2 provider configuration.</p>"
           }
         },
-        "onBehalfOfTokenExchangeConfig": {
-          "target": "com.amazonaws.bedrockagentcorecontrol#OnBehalfOfTokenExchangeConfigType",
-          "traits": {
-            "smithy.api#documentation": "<p>The configuration for on-behalf-of token exchange.</p>"
-          }
-        },
-        "clientAuthenticationMethod": {
-          "target": "com.amazonaws.bedrockagentcorecontrol#ClientAuthenticationMethodType",
-          "traits": {
-            "smithy.api#documentation": "<p>The client authentication method used when authenticating with the token endpoint.</p>"
-          }
+        "privateKeyJwtConfig": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#PrivateKeyJwtConfig"
         }
       },
       "traits": {
@@ -12025,6 +12072,12 @@
           "target": "com.amazonaws.bedrockagentcorecontrol#BedrockEvaluatorModelConfig",
           "traits": {
             "smithy.api#documentation": "<p> The Amazon Bedrock model configuration for evaluation. </p>"
+          }
+        },
+        "responsesEvaluatorModelConfig": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#OpenResponsesEvaluatorModelConfig",
+          "traits": {
+            "smithy.api#documentation": "<p> The OpenResponses model configuration for evaluation. </p>"
           }
         }
       },
@@ -20301,6 +20354,21 @@
         "smithy.api#pattern": "^arn:aws(|-cn|-us-gov):kms:[a-zA-Z0-9-]*:[0-9]{12}:key/[a-zA-Z0-9-]{36}$"
       }
     },
+    "com.amazonaws.bedrockagentcorecontrol#KmsKeySourceType": {
+      "type": "structure",
+      "members": {
+        "kmsKeyArn": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#KmsKeyArn",
+          "traits": {
+            "smithy.api#documentation": "<p>The Amazon Resource Name (ARN) of the KMS key used to sign the JWT client assertion. The key must be an asymmetric key with key usage SIGN_VERIFY and a key spec compatible with the configured signing algorithm.</p>",
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>Contains the KMS key configuration for a JWT client assertion.</p>"
+      }
+    },
     "com.amazonaws.bedrockagentcorecontrol#LambdaArn": {
       "type": "string",
       "traits": {
@@ -26020,6 +26088,56 @@
         }
       }
     },
+    "com.amazonaws.bedrockagentcorecontrol#OpenResponsesEvaluatorModelConfig": {
+      "type": "structure",
+      "members": {
+        "modelId": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#ModelId",
+          "traits": {
+            "smithy.api#documentation": "<p> The identifier of the model to use for evaluation. </p>",
+            "smithy.api#required": {}
+          }
+        },
+        "maxOutputTokens": {
+          "target": "smithy.api#Integer",
+          "traits": {
+            "smithy.api#documentation": "<p> The maximum number of tokens to generate in the model response, including visible output and reasoning tokens. </p>",
+            "smithy.api#range": {
+              "min": 1
+            }
+          }
+        },
+        "temperature": {
+          "target": "smithy.api#Float",
+          "traits": {
+            "smithy.api#documentation": "<p> The temperature value that controls randomness in the model's responses. Lower values produce more deterministic outputs. </p>",
+            "smithy.api#range": {
+              "min": 0,
+              "max": 2
+            }
+          }
+        },
+        "topP": {
+          "target": "smithy.api#Float",
+          "traits": {
+            "smithy.api#documentation": "<p> The top-p sampling parameter that controls the diversity of the model's responses by limiting the cumulative probability of token choices. </p>",
+            "smithy.api#range": {
+              "min": 0,
+              "max": 1
+            }
+          }
+        },
+        "reasoning": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#ReasoningConfiguration",
+          "traits": {
+            "smithy.api#documentation": "<p> The reasoning configuration for reasoning models. Non-reasoning models ignore this configuration. </p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p> The configuration for using models served through the OpenResponses API in evaluator assessments, including model selection and inference parameters. </p>"
+      }
+    },
     "com.amazonaws.bedrockagentcorecontrol#OutputConfig": {
       "type": "structure",
       "members": {
@@ -27717,6 +27835,52 @@
         }
       }
     },
+    "com.amazonaws.bedrockagentcorecontrol#PrivateKeyJwtConfig": {
+      "type": "structure",
+      "members": {
+        "privateKeySource": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#PrivateKeySource",
+          "traits": {
+            "smithy.api#documentation": "<p>The private key source for the JWT client assertion.</p>"
+          }
+        },
+        "signingAlgorithm": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#SigningAlgorithm",
+          "traits": {
+            "smithy.api#documentation": "<p>The algorithm used to sign the JWT client assertion. Valid values are <code>RS256</code>, <code>PS256</code>, and <code>ES256</code>.</p>"
+          }
+        },
+        "additionalHeaderClaims": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#AdditionalClaims",
+          "traits": {
+            "smithy.api#documentation": "<p>A map of additional claims to include in the JWT client assertion header. Standard header claims such as <code>alg</code> and <code>typ</code> cannot be added.</p>"
+          }
+        },
+        "additionalPayloadClaims": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#AdditionalClaims",
+          "traits": {
+            "smithy.api#documentation": "<p>A map of additional claims to include in the JWT client assertion payload. Payload claims generated by the service, such as <code>iss</code>, <code>sub</code>, <code>jti</code>, and <code>exp</code>, cannot be added.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "Configuration for private_key_jwt client authentication (RFC 7523).\nOn Create: privateKeySource and signingAlgorithm are required (enforced server-side).\nOn Update: all fields are optional \u2014 only provided fields are updated."
+      }
+    },
+    "com.amazonaws.bedrockagentcorecontrol#PrivateKeySource": {
+      "type": "union",
+      "members": {
+        "kmsKeySource": {
+          "target": "com.amazonaws.bedrockagentcorecontrol#KmsKeySourceType",
+          "traits": {
+            "smithy.api#documentation": "<p>The KMS key source for the JWT client assertion.</p>"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p>Contains the private key source configuration for a JWT client assertion.</p>"
+      }
+    },
     "com.amazonaws.bedrockagentcorecontrol#Prompt": {
       "type": "string",
       "traits": {
@@ -27860,6 +28024,24 @@
       "traits": {
         "smithy.api#documentation": "<p> The rating scale that defines how evaluators should score agent performance, supporting both numerical and categorical scales. </p>",
         "smithy.api#sensitive": {}
+      }
+    },
+    "com.amazonaws.bedrockagentcorecontrol#ReasoningConfiguration": {
+      "type": "structure",
+      "members": {
+        "effort": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#documentation": "<p> The level of reasoning effort the model applies when generating a response. For supported values, see the model provider's documentation. </p>",
+            "smithy.api#length": {
+              "min": 1,
+              "max": 64
+            }
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "<p> The reasoning configuration that controls how a reasoning model allocates effort during evaluation. </p>"
       }
     },
     "com.amazonaws.bedrockagentcorecontrol#RecordIdentifier": {
@@ -29796,6 +29978,29 @@
       },
       "traits": {
         "smithy.api#output": {}
+      }
+    },
+    "com.amazonaws.bedrockagentcorecontrol#SigningAlgorithm": {
+      "type": "enum",
+      "members": {
+        "RS256": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "RS256"
+          }
+        },
+        "PS256": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "PS256"
+          }
+        },
+        "ES256": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "ES256"
+          }
+        }
       }
     },
     "com.amazonaws.bedrockagentcorecontrol#SkillDefinition": {
